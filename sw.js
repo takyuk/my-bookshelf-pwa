@@ -1,9 +1,15 @@
 // Increment this version whenever publishing changes to app files.
-const CACHE_NAME = 'my-bookshelf-pwa-v3';
+const CACHE_NAME = 'my-bookshelf-pwa-v4';
 const CACHE_PREFIX = 'my-bookshelf-pwa-';
 const APP_SHELL = [
   './',
   './index.html',
+  './css/styles.css',
+  './js/validation.js',
+  './js/storage.js',
+  './js/version.js',
+  './js/app.js',
+  './js/pwa.js',
   './manifest.webmanifest',
   './icons/icon-192.png',
   './icons/icon-512.png'
@@ -38,7 +44,8 @@ self.addEventListener('fetch', event => {
     }
   }).catch(() => {}));
   event.respondWith((async () => {
-    const cache = await caches.open(CACHE_NAME);
+    let cache;
+    try { cache = await caches.open(CACHE_NAME); } catch { return network; }
     let timer;
     try {
       const response = await Promise.race([
