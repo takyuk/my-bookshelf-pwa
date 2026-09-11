@@ -1,4 +1,6 @@
-const CACHE_NAME = 'my-bookshelf-pwa-v2';
+// Increment this version whenever publishing changes to app files.
+const CACHE_NAME = 'my-bookshelf-pwa-v3';
+const CACHE_PREFIX = 'my-bookshelf-pwa-';
 const APP_SHELL = [
   './',
   './index.html',
@@ -8,24 +10,45 @@ const APP_SHELL = [
 ];
 
 self.addEventListener('install', event => {
-  event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(APP_SHELL)));
-  self.skipWaiting();
+  event.waitUntil(caches.open(CACHE_NAME)
+    .then(cache => cache.addAll(APP_SHELL.map(url => new Request(url, {cache:'reload'}))))
+    .then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', event => {
   event.waitUntil(
-    caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))))
+    caches.keys().then(keys => Promise.all(keys.filter(k => k.startsWith(CACHE_PREFIX) && k !== CACHE_NAME).map(k => caches.delete(k))))
+      .then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
 self.addEventListener('fetch', event => {
-  if (event.request.method !== 'GET') return;
-  event.respondWith(
-    caches.match(event.request).then(cached => cached || fetch(event.request).then(response => {
+  const request = event.request;
+  const url = new URL(request.url);
+  if(request.method !== 'GET' || url.origin !== self.location.origin || !url.href.startsWith(self.registration.scope)) return;
+  const isPage = request.mode === 'navigate';
+  const isAppFile = APP_SHELL.some(path => new URL(path, self.registration.scope).href === url.href);
+  if(!isPage && !isAppFile) return;
+  const network = fetch(request, {cache:'no-cache'});
+  event.waitUntil(network.then(async response => {
+    if(response.ok){
       const copy = response.clone();
-      caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
-      return response;
-    }).catch(() => caches.match('./index.html')))
-  );
+      const cache = await caches.open(CACHE_NAME);
+      await cache.put(request, copy);
+    }
+  }).catch(() => {}));
+  event.respondWith((async () => {
+    const cache = await caches.open(CACHE_NAME);
+    let timer;
+    try {
+      const response = await Promise.race([
+        network,
+        new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('Network timeout')), 5000); })
+      ]);
+      if(response.ok) return response;
+      return (await cache.match(request)) || (isPage && await cache.match('./index.html')) || response;
+    } catch {
+      return (await cache.match(request)) || (isPage && await cache.match('./index.html')) || Response.error();
+    } finally { clearTimeout(timer); }
+  })());
 });

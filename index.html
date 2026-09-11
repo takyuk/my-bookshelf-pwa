@@ -139,6 +139,7 @@ dialog{border:0;border-radius:20px;width:min(760px,calc(100vw - 24px));max-heigh
   <script>
 const STORAGE_KEY = 'my-bookshelf-v1';
 const statusLabels = { unread:'未読', reading:'読書中', finished:'読了', paused:'中断' };
+let storageReadFailed = false;
 let books = loadBooks();
 
 const $ = (id) => document.getElementById(id);
@@ -147,17 +148,56 @@ const empty = $('emptyState');
 const dialog = $('bookDialog');
 const form = $('bookForm');
 
-function loadBooks(){
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
-  catch { return []; }
+function validateBooks(value){
+  if(!Array.isArray(value)) throw new Error('書籍の一覧ではありません。');
+  const ids = new Set();
+  return value.map(book => {
+    if(!book || typeof book !== 'object' || Array.isArray(book) ||
+      typeof book.id !== 'string' || !book.id.trim() || ids.has(book.id) ||
+      typeof book.title !== 'string' || !book.title.trim()) throw new Error('書籍のIDまたはタイトルが不正です。');
+    ids.add(book.id);
+    for(const key of ['author','isbn','publisher','publishedDate','purchaseDate','format','location','startedDate','finishedDate','notes','createdAt','updatedAt']){
+      if(book[key] != null && typeof book[key] !== 'string') throw new Error('書籍の項目が不正です。');
+    }
+    if(book.status != null && !Object.hasOwn(statusLabels, book.status)) throw new Error('読書状態が不正です。');
+    if(book.tags != null && (!Array.isArray(book.tags) || book.tags.some(tag => typeof tag !== 'string'))) throw new Error('タグが不正です。');
+    const rating = book.rating == null ? 0 : Number(book.rating);
+    if(!Number.isInteger(rating) || rating < 0 || rating > 5) throw new Error('評価が不正です。');
+    if(book.price != null && (typeof book.price !== 'number' || !Number.isFinite(book.price) || book.price < 0)) throw new Error('購入価格が不正です。');
+    return {...book, status:book.status ?? 'unread', tags:book.tags ?? [], rating};
+  });
 }
-function saveBooks(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(books)); }
+function loadBooks(){
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw === null ? [] : validateBooks(JSON.parse(raw));
+  } catch {
+    storageReadFailed = true;
+    alert('保存データを読み込めませんでした。元のデータを保護するため、追加・編集・削除の保存を停止します。ページを再読み込みするか、バックアップJSONを読み込んで復元してください。');
+    return [];
+  }
+}
+function saveBooks(nextBooks, restoring = false){
+  if(storageReadFailed && !restoring){
+    alert('元の保存データを保護しています。ページを再読み込みするか、バックアップJSONを読み込んでください。');
+    return false;
+  }
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(nextBooks));
+    books = nextBooks;
+    storageReadFailed = false;
+    return true;
+  } catch {
+    alert('保存できませんでした。空き容量やブラウザの保存設定を確認してください。今回の変更は保存されていません。');
+    return false;
+  }
+}
 function uid(){ return crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`; }
 function esc(s=''){ return s.replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c])); }
 
 function currentYearFinished(book){
   if(book.status !== 'finished' || !book.finishedDate) return false;
-  return new Date(book.finishedDate).getFullYear() === new Date().getFullYear();
+  return book.finishedDate.slice(0,4) === String(new Date().getFullYear());
 }
 function renderStats(){
   $('statTotal').textContent = books.length;
@@ -184,6 +224,7 @@ function render(){
   renderStats(); grid.innerHTML='';
   const list = filteredBooks();
   empty.hidden = list.length > 0;
+  empty.textContent = books.length ? '条件に一致する本がありません。' : '本がまだありません。「本を追加」から登録してください。';
   for(const b of list){
     const node = $('bookCardTemplate').content.firstElementChild.cloneNode(true);
     node.querySelector('.status-badge').textContent = statusLabels[b.status] || '';
@@ -229,13 +270,14 @@ form.addEventListener('submit', (e)=>{
   };
   if(!book.title) return;
   const idx=books.findIndex(b=>b.id===id);
-  if(idx>=0) books[idx]=book; else books.unshift(book);
-  saveBooks(); closeDialog(); render();
+  const nextBooks = [...books];
+  if(idx>=0) nextBooks[idx]=book; else nextBooks.unshift(book);
+  if(saveBooks(nextBooks)){ closeDialog(); render(); }
 });
 
 $('deleteBtn').addEventListener('click',()=>{
   const id=$('bookId').value; const b=books.find(x=>x.id===id);
-  if(b && confirm(`「${b.title}」を削除しますか？`)) { books=books.filter(x=>x.id!==id); saveBooks(); closeDialog(); render(); }
+  if(b && confirm(`「${b.title}」を削除しますか？`) && saveBooks(books.filter(x=>x.id!==id))) { closeDialog(); render(); }
 });
 $('addBookBtn').addEventListener('click',()=>openDialog());
 $('closeDialogBtn').addEventListener('click',closeDialog);
@@ -249,9 +291,11 @@ $('exportBtn').addEventListener('click',()=>{
 $('importInput').addEventListener('change', async (e)=>{
   const file=e.target.files?.[0]; if(!file) return;
   try{
-    const data=JSON.parse(await file.text()); const incoming=Array.isArray(data) ? data : data.books;
-    if(!Array.isArray(incoming)) throw new Error();
-    if(confirm(`現在の${books.length}冊を置き換えて、${incoming.length}冊を読み込みますか？`)){ books=incoming; saveBooks(); render(); }
+    const data=JSON.parse(await file.text());
+    if(!Array.isArray(data) && (!data || (data.version != null && data.version !== 1))) throw new Error();
+    const incoming=validateBooks(Array.isArray(data) ? data : data.books);
+    const warning = storageReadFailed ? '読み込めなかった元の保存データを置き換えます。' : `現在の${books.length}冊を置き換えます。`;
+    if(confirm(`${warning}\n${incoming.length}冊を読み込みますか？`) && saveBooks(incoming, true)){ render(); }
   }catch{ alert('読み込みに失敗しました。書き出したJSONファイルを選択してください。'); }
   e.target.value='';
 });
@@ -295,7 +339,29 @@ window.addEventListener('appinstalled', ()=>{
 });
 
 if('serviceWorker' in navigator && location.protocol.startsWith('http')) {
-  window.addEventListener('load', ()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+  let refreshing = false;
+  let pendingReload = false;
+  const hadController = !!navigator.serviceWorker.controller;
+  function reloadForUpdate(){
+    if(refreshing) return;
+    if(dialog.open){ pendingReload = true; return; }
+    refreshing = true;
+    location.reload();
+  }
+  navigator.serviceWorker.addEventListener('controllerchange', ()=>{
+    if(hadController) reloadForUpdate();
+  });
+  dialog.addEventListener('close', ()=>{ if(pendingReload) reloadForUpdate(); });
+  window.addEventListener('load', async ()=>{
+    try {
+      const registration = await navigator.serviceWorker.register('./sw.js', {updateViaCache:'none'});
+      const checkUpdate = ()=>registration.update().catch(error=>console.warn('PWAの更新確認に失敗しました。', error));
+      checkUpdate();
+      document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState === 'visible') checkUpdate(); });
+      window.addEventListener('online', checkUpdate);
+      setInterval(()=>{ if(document.visibilityState === 'visible') checkUpdate(); }, 60 * 60 * 1000);
+    } catch(error){ console.warn('オフライン機能を開始できませんでした。', error); }
+  });
 }
 updateInstallUI();
 render();
