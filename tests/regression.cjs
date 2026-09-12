@@ -9,6 +9,8 @@ new vm.Script(sw);
 (async()=>{
   await require("./storage.cjs")();
   await require('./recovery-ui.cjs')();
+  await require('./catalog.cjs')();
+  await require('./images.cjs')();
   require("./pwa.cjs")();
   const handlers = {};
   const deleted = [];
@@ -18,14 +20,14 @@ new vm.Script(sw);
   const scope = 'https://example.test/books/';
   vm.runInNewContext(sw, {
     self:{location:{origin:'https://example.test'},registration:{scope},clients:{claim:async()=>{}},addEventListener:(name, fn)=>handlers[name]=fn},
-    caches:{open:async()=>cache,keys:async()=>['my-bookshelf-pwa-v3','my-bookshelf-pwa-v4','other-app'],delete:async key=>deleted.push(key)},
+    caches:{open:async()=>cache,keys:async()=>['my-bookshelf-pwa-v3','my-bookshelf-pwa-v4','my-bookshelf-pwa-v5','my-bookshelf-pwa-v6','other-app'],delete:async key=>deleted.push(key)},
     fetch:async()=>{if(networkResponse instanceof Error) throw networkResponse; return networkResponse;},
     URL, Request, Response, setTimeout, clearTimeout,
   });
   let activation;
   handlers.activate({waitUntil:p=>activation=p});
   await activation;
-  assert.deepEqual(deleted,['my-bookshelf-pwa-v3']);
+  assert.deepEqual(deleted,['my-bookshelf-pwa-v3','my-bookshelf-pwa-v4','my-bookshelf-pwa-v5']);
   async function get(file, mode='navigate'){
     let result;
     const pending=[];

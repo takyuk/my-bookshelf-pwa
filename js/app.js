@@ -11,7 +11,7 @@ let editSnapshot;
 let busy = false;
 function uid(){ return globalThis.crypto?.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`; }
 function refreshBooks(){
-  if(dialog.open || busy) return;
+  if(!Terms.allowed() || dialog.open || busy) return;
   const state = store.read();
   books = state.books;
   storageReadFailed = state.failed;
@@ -19,15 +19,19 @@ function refreshBooks(){
 }
 function setBusy(value){
   busy = value;
-  form.querySelectorAll('button').forEach(button=>button.disabled=value);
+  form.querySelectorAll('button, input, select, textarea').forEach(control=>control.disabled=value);
   $('importInput').disabled=value;
+  $('exportBtn').disabled=value || storageReadFailed;
   $('addBookBtn').disabled=value || storageReadFailed;
-  if(!value) document.dispatchEvent(new Event('bookshelf-idle'));
+  document.dispatchEvent(new Event(value ? 'bookshelf-save-start' : 'bookshelf-idle'));
 }
-async function saveBooks(nextBooks, expected, restoring = false){
+async function saveBooks(nextBooks, expected, restoring = false, records = []){
   setBusy(true);
   try {
-    books = await store.save(nextBooks, expected, restoring);
+    books = await store.save(nextBooks, expected, restoring, {
+      prepare:()=>records.length ? BookImages.putAll(records) : undefined,
+      cleanup:next=>BookImages.collect(next)
+    });
     storageReadFailed = false;
     return true;
   } catch(error){
@@ -71,6 +75,7 @@ function filteredBooks(){
   return list;
 }
 function render(){
+  BookCovers.clearCards();
   $('recoveryNotice').hidden = !storageReadFailed;
   $('exportBtn').disabled = storageReadFailed;
   $('addBookBtn').disabled = storageReadFailed || busy;
@@ -96,17 +101,19 @@ function render(){
     node.querySelector('.card-hit').addEventListener('click',()=>openDialog(b.id));
     node.querySelector('.card-hit').setAttribute('aria-label', `${b.title}を編集`);
     grid.appendChild(node);
+    BookCovers.renderCard(node,b);
   }
 }
 
-function resetForm(){ form.reset(); $('bookId').value=''; $('status').value='unread'; $('format').value='紙'; $('rating').value='0'; }
+function resetForm(){ form.reset(); document.dispatchEvent(new Event('bookshelf-form-reset')); $('bookId').value=''; $('status').value='unread'; $('format').value='紙'; $('rating').value='0'; }
 function openDialog(id=null){
   refreshBooks();
-  if(storageReadFailed || busy) return;
+  if(!Terms.allowed() || storageReadFailed || busy) return;
   if(id && !books.some(book=>book.id===id)){ alert('この本は別の画面で削除されています。'); return; }
   editSnapshot = store.snapshot();
   resetForm();
   const editing = id ? books.find(b=>b.id===id) : null;
+  BookCovers.reset(editing);
   $('dialogTitle').textContent = editing ? '本を編集' : '本を追加';
   $('deleteBtn').classList.toggle('hidden', !editing);
   if(editing){
@@ -123,10 +130,12 @@ dialog.addEventListener('close', refreshBooks);
 form.addEventListener('submit', async (e)=>{
   e.preventDefault();
   if(busy) return;
+  if(BookCovers.loading()){alert('画像の確認が終わるまでお待ちください。');return;}
   const id=$('bookId').value || uid();
   const old=books.find(b=>b.id===id);
   const book={
     id,
+    coverId:BookCovers.id(),
     title:$('title').value.trim(), author:$('author').value.trim(), isbn:$('isbn').value.trim(), publisher:$('publisher').value.trim(),
     publishedDate:$('publishedDate').value, purchaseDate:$('purchaseDate').value, price:$('price').value ? Number($('price').value) : null,
     format:$('format').value, location:$('location').value.trim(), status:$('status').value, startedDate:$('startedDate').value,
@@ -138,7 +147,7 @@ form.addEventListener('submit', async (e)=>{
   const idx=books.findIndex(b=>b.id===id);
   const nextBooks = [...books];
   if(idx>=0) nextBooks[idx]=book; else nextBooks.unshift(book);
-  if(await saveBooks(nextBooks, editSnapshot)){ closeDialog(); render(); }
+  if(await saveBooks(nextBooks, editSnapshot, false, BookCovers.records())){ closeDialog(); render(); }
 });
 
 $('deleteBtn').addEventListener('click',async ()=>{
@@ -151,25 +160,36 @@ $('closeDialogBtn').addEventListener('click',closeDialog);
 $('cancelBtn').addEventListener('click',closeDialog);
 ['searchInput','statusFilter','sortSelect'].forEach(id=>$(id).addEventListener('input',render));
 
-$('exportBtn').addEventListener('click',()=>{
+$('exportBtn').addEventListener('click',async ()=>{
+  if(busy) return;
   refreshBooks();
   if(storageReadFailed) return;
-  try { download(JSON.stringify({version:1,exportedAt:new Date().toISOString(),books},null,2), `my-bookshelf-${new Date().toISOString().slice(0,10)}.json`); }
-  catch { alert('書き出しを開始できませんでした。もう一度お試しください。'); }
+  setBusy(true);
+  try {
+    const expected=store.snapshot();
+    const result=await navigator.locks.request(BookStorage.key,async()=>{
+      if(localStorage.getItem(BookStorage.key)!==expected)throw new Error('別の画面で変更されました。再度書き出してください。');
+      return BookBackup.exportZip(books);
+    });
+    if(result.warnings.length&&!confirm(`${result.warnings.length}冊の書影を読み込めませんでした。書籍情報を優先し、該当の書影なしで書き出しますか？`))return;
+    download(result.blob, `my-bookshelf-${new Date().toISOString().slice(0,10)}.zip`,'application/zip');
+  }
+  catch(error) { alert(`書き出しを開始できませんでした。${error.message}`); }
+  finally{setBusy(false);refreshBooks();}
 });
 $('importInput').addEventListener('change', async (e)=>{
   const file=e.target.files?.[0]; if(!file) return;
   if(busy) return;
   refreshBooks();
   const expected = store.snapshot();
+  setBusy(true);
   try{
-    const data=JSON.parse(await file.text());
-    if(!Array.isArray(data) && (!data || (data.version != null && data.version !== 1))) throw new Error();
-    const incoming=validateBooks(Array.isArray(data) ? data : data.books);
+    const result=await BookBackup.importFile(file),incoming=result.books;
     const warning = storageReadFailed ? '読み込めなかった元の保存データを置き換えます。先に「元データを救出」で保管してください。' : `現在の${books.length}冊を置き換えます。`;
-    if(confirm(`${warning}\n${incoming.length}冊を読み込みますか？`) && await saveBooks(incoming, expected, true)){ render(); }
-  }catch(error){ alert(`読み込みに失敗しました。\n${error.message || '書き出したJSONファイルを選択してください。'}`); }
-  e.target.value='';
+    const imageWarning=result.warnings.length ? `\n${result.warnings.length}冊は書影を復元できないため、書籍情報のみ復元します。` : '';
+    if(confirm(`${warning}\n${incoming.length}冊を読み込みますか？${imageWarning}`) && await saveBooks(incoming, expected, true,result.records)){ render(); }
+  }catch(error){ alert(`読み込みに失敗しました。\n${error.message || '書き出したZIPまたはJSONファイルを選択してください。'}`); }
+  finally{setBusy(false);e.target.value='';refreshBooks();}
 });
 
 $('retryBtn').addEventListener('click', refreshBooks);
@@ -184,5 +204,6 @@ window.addEventListener('storage', event=>{ if(event.key === BookStorage.key || 
 window.addEventListener('focus', refreshBooks);
 document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState === 'visible') refreshBooks(); });
 $('commitVersion').textContent = globalThis.BOOKSHELF_VERSION?.label || '開発版（コミット情報なし）';
+document.addEventListener('bookshelf-consent',refreshBooks);
 refreshBooks();
 

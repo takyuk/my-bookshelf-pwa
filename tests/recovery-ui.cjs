@@ -9,6 +9,7 @@ module.exports=async()=>{
     return elements.get(id);
   };
   const context=vm.createContext({
+    Terms:{allowed:()=>true},BookCovers:{clearCards(){}},
     document:{getElementById:element,addEventListener(){},body:{appendChild(){}},createElement:()=>({click(){},remove(){}})},
     window:{addEventListener(){}},navigator:{},localStorage:{getItem:()=>'{broken'},
     Blob,URL:{createObjectURL:blob=>{downloaded=blob;return 'blob:test';},revokeObjectURL(){}},setTimeout:fn=>fn(),

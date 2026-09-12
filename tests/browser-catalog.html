@@ -1,0 +1,26 @@
+<!doctype html><html lang="ja"><meta charset="utf-8"><title>書誌・バーコード実装テスト</title>
+<h1>書誌・バーコード実装テスト</h1><p id="result" role="status">実行中</p><canvas id="barcode" width="351" height="180"></canvas>
+<script src="../js/isbn.js"></script><script src="../js/ndl.js"></script><script src="../vendor/zxing-browser-0.2.1.min.js"></script>
+<script>
+try {
+  const assert=(ok,message)=>{if(!ok)throw Error(message);};
+  const xml=`<rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><channel><item><dc:title>吾輩は猫である</dc:title><dc:creator>夏目漱石</dc:creator><dc:publisher>新潮社</dc:publisher><dcterms:issued>2003.6</dcterms:issued><dc:identifier xsi:type="dcndl:ISBN">4-10-101001-3</dc:identifier><link>https://ndlsearch.ndl.go.jp/books/test</link></item></channel></rss>`;
+  const records=NdlBooks.parse(xml.replace('<dc:creator>夏目漱石</dc:creator>','<dc:creator>夏目, 漱石, 1867-1916</dc:creator><dc:creator>夏目漱石 著</dc:creator>'),'9784101010014');
+  assert(records.length===1 && records[0].title==='吾輩は猫である' && records[0].author==='夏目漱石','XML extraction');
+  assert(records[0].publishedDate==='' && records[0].issued==='2003.6','partial date');
+  assert(NdlBooks.parse(xml,'9780140328721').length===0,'ISBN mismatch');
+  assert(NdlBooks.fullDate('2024.2.29')==='2024-02-29' && NdlBooks.fullDate('2023.2.29')==='','date validation');
+  let rejected=false;try{NdlBooks.parse('<rss>','9784101010014');}catch{rejected=true;}assert(rejected,'malformed XML');
+  const L=['0001101','0011001','0010011','0111101','0100011','0110001','0101111','0111011','0110111','0001011'];
+  const G=['0100111','0110011','0011011','0100001','0011101','0111001','0000101','0010001','0001001','0010111'];
+  const parity=['LLLLLL','LLGLGG','LLGGLG','LLGGGL','LGLLGG','LGGLLG','LGGGLL','LGLGLG','LGLGGL','LGGLGL'];
+  const code='9784101010014';let bits='101';
+  for(let i=1;i<=6;i++)bits+=(parity[Number(code[0])][i-1]==='L'?L:G)[Number(code[i])];
+  bits+='01010';for(let i=7;i<13;i++)bits+=L[Number(code[i])].replace(/[01]/g,c=>c==='0'?'1':'0');bits+='101';
+  const canvas=document.getElementById('barcode'),ctx=canvas.getContext('2d');ctx.fillStyle='white';ctx.fillRect(0,0,351,180);ctx.fillStyle='black';
+  [...bits].forEach((bit,i)=>{if(bit==='1')ctx.fillRect((i+11)*3,10,3,160);});
+  const decoded=new ZXingBrowser.BrowserMultiFormatOneDReader().decodeFromCanvas(canvas).getText();
+  assert(decoded===code,'actual EAN-13 decoding');
+  document.getElementById('result').textContent='PASS：XML書誌取得・日付・不正応答・ISBN一致・実際のEAN-13画像の読み取り';
+}catch(error){document.getElementById('result').textContent='FAIL：'+error.message;}
+</script></html>

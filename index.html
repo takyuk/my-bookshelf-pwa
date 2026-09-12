@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="./css/styles.css" />
 </head>
 <body>
+  <div id="appShell" hidden inert>
   <header class="topbar">
     <div>
       <p class="eyebrow">Personal Library</p>
@@ -28,7 +29,7 @@
   <main class="container">
     <section id="recoveryNotice" class="recovery-notice" role="alert" hidden>
       <strong>保存データを読み込めませんでした</strong>
-      <p>本が消えたとは限りません。元の保存データを保護するため、追加・編集・通常の書き出しを停止しています。まず「元データを救出」で原文を保管してください。復元は「読み込み」から正常なバックアップJSONを選択します。</p>
+      <p>本が消えたとは限りません。元の保存データを保護するため、追加・編集・通常の書き出しを停止しています。まず「元データを救出」で原文を保管してください（画像は含まれません）。復元は「読み込み」から正常なバックアップZIPまたは旧JSONを選択します。</p>
       <button id="rescueBtn" class="ghost" type="button">元データを救出</button>
       <button id="retryBtn" class="ghost" type="button">再読み込みを試す</button>
     </section>
@@ -60,12 +61,14 @@
       <h2>本棚</h2>
       <div class="actions-inline">
         <button id="exportBtn" class="ghost">書き出し</button>
-        <label class="ghost file-label">読み込み<input id="importInput" type="file" accept="application/json" hidden /></label>
+        <label class="ghost file-label">読み込み<input id="importInput" type="file" accept=".zip,.json,application/zip,application/json" hidden /></label>
       </div>
     </section>
 
     <section id="bookGrid" class="book-grid" aria-live="polite"></section>
     <p id="emptyState" class="empty">本がまだありません。「本を追加」から登録してください。</p>
+    <button id="showTerms" type="button" class="ghost">利用規約</button>
+    <p class="catalog-note">書き出しは画像付きZIPです。バックアップは暗号化されません。Android版Chromeを対象としています。</p>
   </main>
 
   <dialog id="bookDialog">
@@ -79,6 +82,35 @@
       </div>
 
       <input id="bookId" type="hidden" />
+      <section class="isbn-tools" aria-label="ISBNから自動入力">
+        <div class="isbn-actions">
+          <button type="button" id="scanIsbnBtn" class="ghost">カメラでISBNを読む</button>
+          <button type="button" id="lookupIsbnBtn" class="ghost">ISBNで書誌検索</button>
+        </div>
+        <label class="overwrite-option"><input id="overwriteBibliography" type="checkbox" /> 入力済みの書誌情報も置き換える</label>
+        <p class="catalog-note">カメラ映像は送信しません。検索時はISBNのみを送信します。</p>
+        <div id="scannerPanel" hidden>
+          <video id="barcodeVideo" autoplay muted playsinline aria-label="バーコード読み取り用カメラ映像"></video>
+          <p class="catalog-note">本の裏面の、978・979から始まるバーコードを写してください。</p>
+          <button type="button" id="stopScanBtn" class="ghost">読み取りを中止</button>
+        </div>
+        <p id="catalogStatus" role="status" aria-live="polite"></p>
+        <div id="catalogCandidates"></div>
+        <a id="catalogSource" target="_blank" rel="noopener noreferrer" hidden>出典：国立国会図書館サーチ</a>
+      </section>
+      <section class="cover-tools" aria-label="書影の登録">
+        <h3>書影（1冊につき1枚）</h3>
+        <img id="coverPreview" alt="登録する書影のプレビュー" hidden />
+        <div class="isbn-actions">
+          <button type="button" id="takeCover" class="ghost">書影を撮影</button>
+          <button type="button" id="chooseCover" class="ghost">画像を選択</button>
+          <button type="button" id="removeCover" class="ghost">書影を削除</button>
+        </div>
+        <input id="cameraCoverInput" type="file" accept="image/jpeg,image/png,image/webp" capture="environment" hidden />
+        <input id="fileCoverInput" type="file" accept="image/jpeg,image/png,image/webp" hidden />
+        <p class="catalog-note">JPEG・PNG・WebP、1枚30MB・6,000万画素まで。縮小・圧縮・切り抜きは行いません。向き以外のExifを削除し、画像は端末内に保存します。写り込んだ個人情報は除去されません。</p>
+        <p id="coverStatus" role="status"></p>
+      </section>
       <div class="form-grid">
         <label>タイトル *<input id="title" required /></label>
         <label>著者<input id="author" /></label>
@@ -125,11 +157,50 @@
       </div>
     </article>
   </template>
+  </div>
+  <dialog id="termsDialog" aria-labelledby="termsTitle">
+    <div class="terms-content">
+      <h2 id="termsTitle">My Bookshelf 利用規約</h2>
+      <h3>1．利用目的</h3>
+      <p>本アプリは、利用者本人による私的な蔵書・読書記録の管理に限り利用できます。業務利用、商用利用、第三者への公開を目的とした利用は禁止します。</p>
+      <h3>2．登録する画像</h3>
+      <p>利用者は、自ら撮影した画像を含め、本人による本アプリへの登録・保存・閲覧について必要な許諾その他の適法な利用根拠がある画像のみを登録してください。第三者の著作権、肖像権、プライバシーその他の権利を侵害する画像は登録できません。</p>
+      <h3>3．公開・配布の禁止</h3>
+      <p>本アプリの画面のスクリーンショット、画面録画、登録画像および登録内容を、SNS、動画サイト、公開Webページなどへアップロード・掲載することを禁止します。</p>
+      <h3>4．バックアップ</h3>
+      <p>バックアップデータは、利用者本人による保存、復元および本人の端末間の移行のためにのみ使用してください。第三者への配布、販売または公開は禁止します。</p>
+      <h3>5．画像の取り扱い</h3>
+      <p>登録画像は端末内に保存し、本アプリから外部サーバーへ送信しません。登録時に向きに関する情報を除くExif情報を削除しますが、画像に写り込んだ人物、住所などは除去しません。登録前に利用者自身で画像の内容を確認してください。</p>
+      <h3>6．データの保存</h3>
+      <p>ブラウザのデータ削除や端末の故障などにより、登録内容を失う場合があります。バックアップは利用者自身で保管してください。バックアップZIPは暗号化されません。</p>
+      <h3>7．権利の扱い</h3>
+      <p>本規約への同意によって、登録画像その他の著作物について第三者の権利の許諾が付与されるものではありません。</p>
+      <div id="termsConsent">
+        <label class="overwrite-option"><input id="termsCheck" type="checkbox" /> 本規約を読み、内容に同意します。</label>
+        <p>同意しない場合は本アプリを利用できません。この画面を閉じて終了してください。</p>
+        <button id="acceptTerms" type="button" class="primary" disabled>同意して利用を開始</button>
+      </div>
+      <button id="closeTerms" type="button" class="ghost" hidden>閉じる</button>
+      <p id="termsError" role="alert"></p>
+    </div>
+  </dialog>
+  <noscript>本アプリを利用するにはJavaScriptを有効にしてください。</noscript>
 
+  <script defer src="./vendor/jszip-3.10.1.min.js"></script>
   <script defer src="./js/validation.js"></script>
   <script defer src="./js/storage.js"></script>
   <script defer src="./js/version.js"></script>
+  <script defer src="./js/image-codec.js"></script>
+  <script defer src="./js/images.js"></script>
+  <script defer src="./js/backup.js"></script>
+  <script defer src="./js/terms.js"></script>
+  <script defer src="./js/covers.js"></script>
   <script defer src="./js/app.js"></script>
+  <script defer src="./js/isbn.js"></script>
+  <script defer src="./js/ndl.js"></script>
+  <script defer src="./js/catalog-config.js"></script>
+  <script defer src="./vendor/zxing-browser-0.2.1.min.js"></script>
+  <script defer src="./js/catalog.js"></script>
   <script defer src="./js/pwa.js"></script>
 </body>
 </html>

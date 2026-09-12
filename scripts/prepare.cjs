@@ -13,7 +13,7 @@ const version = `globalThis.BOOKSHELF_VERSION = ${JSON.stringify({commit, label}
 if(publishing || preview){
   const output = path.join(root, 'dist');
   fs.mkdirSync(output, {recursive:true});
-  for(const file of ['index.html','manifest.webmanifest','sw.js','css','js','icons']){
+  for(const file of ['index.html','manifest.webmanifest','sw.js','css','js','icons','vendor']){
     fs.cpSync(path.join(root,file), path.join(output,file), {recursive:true});
   }
   fs.writeFileSync(path.join(output,'js/version.js'),version);

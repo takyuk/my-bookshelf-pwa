@@ -1,5 +1,5 @@
 // Increment this version whenever publishing changes to app files.
-const CACHE_NAME = 'my-bookshelf-pwa-v4';
+const CACHE_NAME = 'my-bookshelf-pwa-v6';
 const CACHE_PREFIX = 'my-bookshelf-pwa-';
 const APP_SHELL = [
   './',
@@ -7,9 +7,20 @@ const APP_SHELL = [
   './css/styles.css',
   './js/validation.js',
   './js/storage.js',
+  './js/image-codec.js',
+  './js/images.js',
+  './js/backup.js',
+  './js/terms.js',
+  './js/covers.js',
+  './vendor/jszip-3.10.1.min.js',
   './js/version.js',
   './js/app.js',
   './js/pwa.js',
+  './js/isbn.js',
+  './js/ndl.js',
+  './js/catalog-config.js',
+  './js/catalog.js',
+  './vendor/zxing-browser-0.2.1.min.js',
   './manifest.webmanifest',
   './icons/icon-192.png',
   './icons/icon-512.png'

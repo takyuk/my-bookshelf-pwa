@@ -1,0 +1,65 @@
+<!doctype html><meta charset="utf-8"><title>書影・バックアップ検証</title>
+<h1>書影・バックアップ検証（専用の空のローカル環境で実行）</h1><pre id="result">実行中…</pre><iframe id="app" src="../index.html" style="width:390px;height:700px"></iframe>
+<script>
+(async()=>{
+  const output=document.getElementById('result'),frame=document.getElementById('app');
+  const wait=async fn=>{for(let i=0;i<200;i++){if(fn())return;await new Promise(r=>setTimeout(r,25));}throw Error('タイムアウト');};
+  const ok=(condition,message)=>{if(!condition)throw Error(message);output.textContent+='\nPASS '+message;};
+  try{
+    await wait(()=>frame.contentDocument?.getElementById('acceptTerms'));
+    const w=frame.contentWindow,d=w.document;
+    await wait(()=>{try{return w.eval('typeof BookCovers')!=='undefined';}catch{return false;}});
+    if(w.localStorage.getItem('my-bookshelf-v1')!==null)throw Error('既存の書籍があるため検証を停止しました。専用の空のポートで実行してください。');
+    const termsBefore=w.localStorage.getItem('my-bookshelf-terms');
+    if(!w.eval('Terms.allowed()')){
+      ok(d.getElementById('appShell').hidden,'同意前は本棚を非表示');
+      ok(d.getElementById('acceptTerms').disabled,'未チェックでは開始不可');
+      d.getElementById('termsCheck').checked=true;d.getElementById('termsCheck').dispatchEvent(new Event('change'));d.getElementById('acceptTerms').click();
+    }
+    ok(!d.getElementById('appShell').hidden,'同意後に本棚表示');
+    const codec=w.eval('ImageCodec'),images=w.eval('BookImages'),backup=w.eval('BookBackup');
+    const canvas=document.createElement('canvas');canvas.width=24;canvas.height=40;const ctx=canvas.getContext('2d');ctx.fillStyle='red';ctx.fillRect(0,0,12,40);ctx.fillStyle='blue';ctx.fillRect(12,0,12,40);
+    const exif=new Uint8Array(60),v=new DataView(exif.buffer);exif.set([73,73,42,0,8,0,0,0,2,0]);v.setUint16(10,0x112,true);v.setUint16(12,3,true);v.setUint32(14,1,true);v.setUint16(18,6,true);v.setUint16(22,0x13b,true);v.setUint16(24,2,true);v.setUint32(26,8,true);v.setUint32(30,40,true);exif.set(new TextEncoder().encode('PRIVATE'),40);
+    const concat=parts=>{const b=new Uint8Array(parts.reduce((n,p)=>n+p.length,0));let i=0;for(const p of parts){b.set(p,i);i+=p.length;}return b;};
+    const pixels=async blob=>{const url=URL.createObjectURL(blob);try{const img=new Image();img.src=url;await img.decode();const c=document.createElement('canvas');c.width=img.naturalWidth;c.height=img.naturalHeight;c.getContext('2d').drawImage(img,0,0);return {w:c.width,h:c.height,data:Array.from(c.getContext('2d').getImageData(0,0,c.width,c.height).data).join(',')};}finally{URL.revokeObjectURL(url);}};
+    let sample;
+    for(const type of ['image/jpeg','image/png','image/webp']){
+      const blob=await new Promise(resolve=>canvas.toBlob(resolve,type));const bytes=new Uint8Array(await blob.arrayBuffer());let original;
+      if(type==='image/jpeg')original=concat([bytes.slice(0,2),new Uint8Array([255,225,0,exif.length+8,69,120,105,102,0,0]),exif,bytes.slice(2)]);
+      if(type==='image/png'){
+        const chunk=new Uint8Array(exif.length+12),c=new DataView(chunk.buffer);c.setUint32(0,exif.length);chunk.set([101,88,73,102],4);chunk.set(exif,8);c.setUint32(chunk.length-4,codec.crc32(chunk.slice(4,-4)));original=concat([bytes.slice(0,33),chunk,bytes.slice(33)]);
+      }
+      if(type==='image/webp'){
+        const extended=new Uint8Array([86,80,56,88,10,0,0,0,8,0,0,0,23,0,0,39,0,0]);
+        const chunk=new Uint8Array(exif.length+8);chunk.set([69,88,73,70]);new DataView(chunk.buffer).setUint32(4,exif.length,true);chunk.set(exif,8);
+        if(new TextDecoder().decode(bytes.slice(12,16))==='VP8X'){bytes[20]|=8;original=concat([bytes,chunk]);}
+        else original=concat([bytes.slice(0,12),extended,bytes.slice(12),chunk]);
+        new DataView(original.buffer).setUint32(4,original.length-8,true);
+      }
+      const file=new File([original],'sample',{type}),clean=await codec.fromFile(file);
+      ok(clean.orientation===6,type+' 向き6を保持');
+      ok(!new TextDecoder().decode(clean.bytes).includes('PRIVATE'),type+' 個人情報Exifを除去');
+      ok(JSON.stringify(await pixels(file))===JSON.stringify(await pixels(clean.blob)),type+' 表示の向き・画素一致');
+      if(type==='image/jpeg')sample=file;
+    }
+    d.getElementById('addBookBtn').click();d.getElementById('title').value='書影テスト';
+    const transfer=new w.DataTransfer();transfer.items.add(sample);d.getElementById('fileCoverInput').files=transfer.files;d.getElementById('fileCoverInput').dispatchEvent(new Event('change'));
+    await wait(()=>!w.eval('BookCovers.loading()'));ok(!d.getElementById('coverPreview').hidden,'選択画像のプレビュー');
+    d.getElementById('bookForm').requestSubmit();await wait(()=>!d.getElementById('bookDialog').open);
+    await wait(()=>d.querySelector('.cover img')?.complete);ok(true,'書籍と画像の保存・本棚表示');
+    const books=JSON.parse(w.localStorage.getItem('my-bookshelf-v1'));ok(!!(await images.get(books[0].coverId))?.blob,'IndexedDBに画像保存');
+    const zip=await backup.exportZip(books),restored=await backup.importFile(zip.blob);ok(restored.books.length===1&&restored.records.length===1,'実画像付きZIPの往復');
+    d.querySelector('.card-hit').click();d.getElementById('removeCover').click();d.getElementById('cancelBtn').click();await wait(()=>!d.getElementById('bookDialog').open);ok(JSON.parse(w.localStorage.getItem('my-bookshelf-v1'))[0].coverId===books[0].coverId,'書影削除のキャンセル');
+    const confirmation=w.confirm;w.confirm=()=>true;
+    const importTransfer=new w.DataTransfer();importTransfer.items.add(new File([zip.blob],'backup.zip',{type:'application/zip'}));
+    d.getElementById('importInput').files=importTransfer.files;d.getElementById('importInput').dispatchEvent(new Event('change'));
+    await wait(()=>!w.eval('busy'));w.confirm=confirmation;
+    const imported=JSON.parse(w.localStorage.getItem('my-bookshelf-v1'));
+    ok(imported[0].coverId!==books[0].coverId&&!!(await images.get(imported[0].coverId))?.blob,'画面からZIP復元・新しい画像IDで保存');
+    ok(!(await images.get(books[0].coverId)),'復元完了後に旧画像を整理');
+    await w.navigator.locks.request('my-bookshelf-v1',async()=>{w.localStorage.removeItem('my-bookshelf-v1');await images.collect([]);});
+    if(termsBefore===null)w.localStorage.removeItem('my-bookshelf-terms');
+    frame.remove();output.textContent+='\nALL PASS（テストデータを削除済み）';
+  }catch(error){output.textContent+='\nFAIL '+error.stack;}
+})();
+</script>
