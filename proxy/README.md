@@ -34,6 +34,29 @@ PCとトンネルを止めると一時URLは使えなくなります。URLごと
 
 ## 検証
 
+### 公開Workerの502診断
+
+中継処理が502を返すとき、`ndl_relay_failure`というJSONログをconsole.errorへ出力します。
+ISBN、URL、リクエスト、書誌本文、例外の生メッセージ・スタックは記録しません。
+`upstreamStatus`がnullなら国会図書館からHTTP応答を取得する前の失敗です。
+主な`stage`: `upstream_fetch`（接続）、`upstream_status`（HTTPエラー）、
+`response_read`（本文受信）、`response_size`（1MB超過）、`response_format`（RSS以外）。
+`errorName`は例外の種類、`hint`は既知の例外メッセージを固定ラベルに分類した補助情報です。
+`request_context`はリクエスト間の実行コンテキスト、`fetch_binding`はfetchの呼出し方、
+`network`は接続、`timeout`は制限時間、`unknown`は分類不能を表します。hintだけで原因を断定しないでください。
+受信バイト数と、待機を含む経過ミリ秒も記録します。APIの応答内容と検索動作は従来どおりです。
+
+診断コードを公開後、ログを開始した状態でスマホから検索してください。
+
+```powershell
+npx wrangler deploy --config proxy/wrangler.toml
+npx wrangler tail --config proxy/wrangler.toml
+```
+
+表示された`ndl_relay_failure`のJSONを確認します。終了はCtrl+Cです。
+Wrangler自身のアクセスログにはリクエストURL（ISBNを含む）が表示される場合があります。
+共有する場合は`ndl_relay_failure`のJSON部分だけを取り出してください。
+
 - `node tests/regression.cjs`：ISBN・中継・カメラの中止と終了処理を含む自動チェック。
 - ローカルの `/tests/browser-catalog.html`：実ブラウザでXML解析とEAN-13画像の復号を検証。
 - スマホ実機：許可/拒否、背面カメラ、上下2段のバーコード、明るさ、読み取り中止、画面を閉じた後のカメラ終了を確認。

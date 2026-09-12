@@ -10,6 +10,7 @@ new vm.Script(sw);
   await require("./storage.cjs")();
   await require('./recovery-ui.cjs')();
   await require('./catalog.cjs')();
+  await require('./relay-diagnostics.cjs')();
   await require('./images.cjs')();
   require("./pwa.cjs")();
   const handlers = {};
