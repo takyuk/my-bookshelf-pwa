@@ -206,3 +206,9 @@ $('commitVersion').textContent = globalThis.BOOKSHELF_VERSION?.label || '開発�
 document.addEventListener('bookshelf-consent',refreshBooks);
 refreshBooks();
 
+
+$('showPhotoHelp').addEventListener('click',()=>$('photoHelpDialog').showModal());
+$('closePhotoHelp').addEventListener('click',()=>$('photoHelpDialog').close());
+
+$('showIsbnHelp').addEventListener('click',()=>$('isbnHelpDialog').showModal());
+$('closeIsbnHelp').addEventListener('click',()=>$('isbnHelpDialog').close());

@@ -52,3 +52,14 @@ dialog{border:0;border-radius:20px;width:min(760px,calc(100vw - 24px));max-heigh
 .book-form-scroll{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:22px;scroll-padding-block:16px}
 .book-delete-row{margin-top:20px}
 #bookForm>.dialog-actions{flex:none;position:relative;justify-content:flex-end;margin:0;padding:14px 22px calc(14px + env(safe-area-inset-bottom,0px));background:#fff;border-top:1px solid var(--line);box-shadow:0 -5px 18px rgba(15,23,42,.08);z-index:1}
+
+/* Keep the editing controls compact; detailed notes remain available in a dialog. */
+#bookForm .isbn-tools,#bookForm .cover-tools{padding:10px;margin-bottom:12px}
+.cover-tools-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px;margin-bottom:8px}
+.cover-tools-head h3{margin:0}
+#showPhotoHelp{padding:8px;font-size:.75rem}
+#coverStatus:empty{display:none}
+#bookForm #coverPreview{max-height:120px}
+
+.isbn-camera-actions{display:inline-flex;align-items:center;gap:8px;max-width:100%}
+#showIsbnHelp{padding:8px;font-size:.75rem}
