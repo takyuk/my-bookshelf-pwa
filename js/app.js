@@ -101,7 +101,7 @@ function render(){
   }
 }
 
-function resetForm(){ form.reset(); document.dispatchEvent(new Event('bookshelf-form-reset')); $('bookId').value=''; $('status').value='unread'; $('format').value='紙'; $('rating').value='0'; }
+function resetForm(){ form.reset(); document.dispatchEvent(new Event('bookshelf-form-reset')); $('bookId').value=''; $('status').value='finished'; $('format').value='紙'; $('rating').value='0'; }
 function openDialog(id=null){
   refreshBooks();
   if(!Terms.allowed() || storageReadFailed || busy) return;
@@ -117,7 +117,7 @@ function openDialog(id=null){
     ['title','volume','author','isbn','publisher','publishedDate','purchaseDate','price','format','location','status','startedDate','finishedDate','rating','notes'].forEach(k=>$(k).value=editing[k] ?? '');
     $('tags').value=(editing.tags||[]).join(', ');
   }
-  dialog.showModal();
+  if(!dialog.open) dialog.showModal();
   // Reset both the remembered focus and scroll position whenever the form opens.
   $('closeDialogBtn').focus({preventScroll:true});
   form.querySelector('.book-form-scroll').scrollTop = 0;
@@ -130,6 +130,7 @@ form.addEventListener('submit', async (e)=>{
   e.preventDefault();
   if(busy) return;
   if(BookCovers.loading()){alert('画像の確認が終わるまでお待ちください。');return;}
+  const continueEntry = e.submitter?.id === 'saveNextBtn';
   const id=$('bookId').value || uid();
   const old=books.find(b=>b.id===id);
   const book={
@@ -146,7 +147,10 @@ form.addEventListener('submit', async (e)=>{
   const idx=books.findIndex(b=>b.id===id);
   const nextBooks = [...books];
   if(idx>=0) nextBooks[idx]=book; else nextBooks.unshift(book);
-  if(await saveBooks(nextBooks, editSnapshot, false, BookCovers.records())){ closeDialog(); render(); }
+  if(await saveBooks(nextBooks, editSnapshot, false, BookCovers.records())){
+    if(continueEntry) openDialog(); else closeDialog();
+    render();
+  }
 });
 
 $('deleteBtn').addEventListener('click',async ()=>{

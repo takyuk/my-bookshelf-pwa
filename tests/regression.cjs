@@ -8,6 +8,7 @@ for(const file of fs.readdirSync(path.join(root,"js"))) new vm.Script(fs.readFil
 new vm.Script(sw);
 (async()=>{
   await require("./storage.cjs")();
+  await require("./continuous-entry.cjs")();
   await require('./recovery-ui.cjs')();
   await require('./catalog.cjs')();
   await require('./relay-diagnostics.cjs')();
