@@ -66,5 +66,21 @@ module.exports=async()=>{
   el('bookDialog').listeners.close();
   await new Promise(resolve=>setImmediate(resolve));
   assert.equal(el('catalogStatus').textContent,'');
+  // Volume follows the same overwrite and in-flight edit protections as other fields.
+  const record={isbn:'9784101010014',title:'本',volume:'上巻'};
+  context.NdlBooks.parse=()=>[record];
+  await el('lookupIsbnBtn').listeners.click();
+  assert.equal(el('volume').value,'上巻');
+  el('volume').value='手入力';
+  await el('lookupIsbnBtn').listeners.click();
+  assert.equal(el('volume').value,'手入力');
+  el('overwriteBibliography').checked=true;
+  await el('lookupIsbnBtn').listeners.click();
+  assert.equal(el('volume').value,'上巻');
+  let finish;
+  context.fetch=()=>new Promise(resolve=>finish=resolve);
+  const pending=el('lookupIsbnBtn').listeners.click();
+  el('volume').value='下巻';finish(new Response('<rss/>'));await pending;
+  assert.equal(el('volume').value,'下巻');
   console.log('PASS: ISBN checksums, relay validation/cache/errors, camera cancellation, two-read confirmation and cleanup');
 };

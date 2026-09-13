@@ -1,5 +1,6 @@
 const NdlBooks = (() => {
   const DC='http://purl.org/dc/elements/1.1/';
+  const NDL='http://ndl.go.jp/dcndl/terms/';
   const TERMS='http://purl.org/dc/terms/';
   const XSI='http://www.w3.org/2001/XMLSchema-instance';
   function cleanAuthor(value){
@@ -37,7 +38,7 @@ const NdlBooks = (() => {
       const issued=texts(item,TERMS,'issued')[0] || texts(item,DC,'date')[0] || '';
       const link=item.getElementsByTagName('link')[0]?.textContent.trim() || '';
       const source=/^https:\/\/ndlsearch\.ndl\.go\.jp\/books\//.test(link) ? link : '';
-      books.push({isbn,title,author:[...new Set(texts(item,DC,'creator').map(cleanAuthor).filter(Boolean))].join(' / '),publisher:[...new Set(texts(item,DC,'publisher'))].join(' / '),publishedDate:fullDate(issued),issued,source});
+      books.push({isbn,title,volume:texts(item,NDL,'volume')[0] || '',author:[...new Set(texts(item,DC,'creator').map(cleanAuthor).filter(Boolean))].join(' / '),publisher:[...new Set(texts(item,DC,'publisher'))].join(' / '),publishedDate:fullDate(issued),issued,source});
     }
     return books;
   }

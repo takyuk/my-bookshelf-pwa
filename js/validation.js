@@ -7,7 +7,7 @@ function validateBooks(value){
       typeof book.id !== 'string' || !book.id.trim() || ids.has(book.id) ||
       typeof book.title !== 'string' || !book.title.trim()) throw new Error('書籍のIDまたはタイトルが不正です。');
     ids.add(book.id);
-    for(const key of ['author','isbn','publisher','publishedDate','purchaseDate','format','location','startedDate','finishedDate','notes','createdAt','updatedAt']){
+    for(const key of ['volume','author','isbn','publisher','publishedDate','purchaseDate','format','location','startedDate','finishedDate','notes','createdAt','updatedAt']){
       if(book[key] != null && typeof book[key] !== 'string') throw new Error('書籍の項目が不正です。');
     }
     if(book.status != null && !Object.hasOwn(statusLabels, book.status)) throw new Error('読書状態が不正です。');

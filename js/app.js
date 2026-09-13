@@ -59,7 +59,7 @@ function filteredBooks(){
   const q = $('searchInput').value.trim().toLowerCase();
   const status = $('statusFilter').value;
   let list = books.filter(b => {
-    const hay = [b.title,b.author,b.isbn,b.publisher,b.location,(b.tags||[]).join(' ')].join(' ').toLowerCase();
+    const hay = [b.title,b.volume,b.author,b.isbn,b.publisher,b.location,(b.tags||[]).join(' ')].join(' ').toLowerCase();
     return (!q || hay.includes(q)) && (status==='all' || b.status===status);
   });
   switch($('sortSelect').value){
@@ -88,14 +88,14 @@ function render(){
     const node = $('bookCardTemplate').content.firstElementChild.cloneNode(true);
     node.querySelector('.status-badge').textContent = statusLabels[b.status] || '';
     node.querySelector('.rating').textContent = Number(b.rating) ? '★'.repeat(Number(b.rating)) : '';
-    node.querySelector('.book-title').textContent = b.title;
+    node.querySelector('.book-title').textContent = [b.title,b.volume].filter(Boolean).join(' ');
     node.querySelector('.book-author').textContent = b.author || '著者未登録';
     const tags = node.querySelector('.tag-list');
     (b.tags||[]).slice(0,4).forEach(t=>{ const s=document.createElement('span'); s.className='tag'; s.textContent=t; tags.appendChild(s); });
     const meta = [b.format,b.location,b.finishedDate ? `読了 ${b.finishedDate}` : ''].filter(Boolean).join(' ・ ');
     node.querySelector('.book-meta').textContent = meta;
     node.querySelector('.card-hit').addEventListener('click',()=>openDialog(b.id));
-    node.querySelector('.card-hit').setAttribute('aria-label', `${b.title}を編集`);
+    node.querySelector('.card-hit').setAttribute('aria-label', `${[b.title,b.volume].filter(Boolean).join(' ')}を編集`);
     grid.appendChild(node);
     BookCovers.renderCard(node,b);
   }
@@ -114,10 +114,13 @@ function openDialog(id=null){
   $('deleteBtn').classList.toggle('hidden', !editing);
   if(editing){
     $('bookId').value=editing.id;
-    ['title','author','isbn','publisher','publishedDate','purchaseDate','price','format','location','status','startedDate','finishedDate','rating','notes'].forEach(k=>$(k).value=editing[k] ?? '');
+    ['title','volume','author','isbn','publisher','publishedDate','purchaseDate','price','format','location','status','startedDate','finishedDate','rating','notes'].forEach(k=>$(k).value=editing[k] ?? '');
     $('tags').value=(editing.tags||[]).join(', ');
   }
   dialog.showModal();
+  // Reset both the remembered focus and scroll position whenever the form opens.
+  $('closeDialogBtn').focus({preventScroll:true});
+  form.querySelector('.book-form-scroll').scrollTop = 0;
 }
 function closeDialog(){ if(!busy) dialog.close(); }
 dialog.addEventListener('cancel', event=>{ if(busy) event.preventDefault(); });
@@ -132,7 +135,7 @@ form.addEventListener('submit', async (e)=>{
   const book={
     id,
     coverId:BookCovers.id(),
-    title:$('title').value.trim(), author:$('author').value.trim(), isbn:$('isbn').value.trim(), publisher:$('publisher').value.trim(),
+    title:$('title').value.trim(), volume:$('volume').value.trim(), author:$('author').value.trim(), isbn:$('isbn').value.trim(), publisher:$('publisher').value.trim(),
     publishedDate:$('publishedDate').value, purchaseDate:$('purchaseDate').value, price:$('price').value ? Number($('price').value) : null,
     format:$('format').value, location:$('location').value.trim(), status:$('status').value, startedDate:$('startedDate').value,
     finishedDate:$('finishedDate').value, rating:Number($('rating').value),

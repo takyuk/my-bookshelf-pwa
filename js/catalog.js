@@ -35,7 +35,7 @@
   function apply(book, initial, id, overwrite){
     if(id!==requestId || !formDialog.open || BookISBN.normalize(isbnInput.value)!==book.isbn) return;
     let filled=0;
-    for(const name of ['title','author','publisher','publishedDate']){
+    for(const name of ['title','volume','author','publisher','publishedDate']){
       const input=byId(name);
       // Never overwrite edits made while waiting for the API or choosing a record.
       if(book[name] && input.value===initial[name] && (overwrite || !input.value.trim())){input.value=book[name];filled++;}
@@ -51,7 +51,7 @@
     if(!isbn){message('正しいISBNを入力してください（10桁または978・979から始まる13桁）。');return;}
     isbnInput.value=isbn;
     const id=requestId;
-    const initial=Object.fromEntries(['title','author','publisher','publishedDate'].map(name=>[name,byId(name).value]));
+    const initial=Object.fromEntries(['title','volume','author','publisher','publishedDate'].map(name=>[name,byId(name).value]));
     const overwrite=byId('overwriteBibliography').checked;
     abortController=new AbortController();
     const controller=abortController;
@@ -70,7 +70,7 @@
       message('複数の書誌情報が見つかりました。お手元の版を選択してください。');
       for(const book of books){
         const button=document.createElement('button');button.type='button';button.className='ghost catalog-choice';
-        button.textContent=[book.title,book.author,book.publisher,book.issued].filter(Boolean).join(' / ');
+        button.textContent=[book.title,book.volume,book.author,book.publisher,book.issued].filter(Boolean).join(' / ');
         button.addEventListener('click',()=>apply(book,initial,id,overwrite));candidates.appendChild(button);
       }
     } catch(error){

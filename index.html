@@ -84,6 +84,7 @@
 
       <input id="bookId" type="hidden" />
       <section class="isbn-tools" aria-label="ISBNから自動入力">
+        <label>ISBN<input id="isbn" inputmode="numeric" /></label>
         <div class="isbn-actions">
           <button type="button" id="scanIsbnBtn" class="ghost">カメラでISBNを読む</button>
           <button type="button" id="lookupIsbnBtn" class="ghost">ISBNで書誌検索</button>
@@ -116,7 +117,7 @@
       <div class="form-grid">
         <label>タイトル *<input id="title" required /></label>
         <label>著者<input id="author" /></label>
-        <label>ISBN<input id="isbn" inputmode="numeric" /></label>
+        <label>巻次<input id="volume" type="text" placeholder="例：1、上巻、第2部" /></label>
         <label>出版社<input id="publisher" /></label>
         <label>刊行日<input id="publishedDate" type="date" /></label>
         <label>購入日<input id="purchaseDate" type="date" /></label>

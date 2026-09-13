@@ -4,9 +4,14 @@
 <script>
 try {
   const assert=(ok,message)=>{if(!ok)throw Error(message);};
-  const xml=`<rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><channel><item><dc:title>吾輩は猫である</dc:title><dc:creator>夏目漱石</dc:creator><dc:publisher>新潮社</dc:publisher><dcterms:issued>2003.6</dcterms:issued><dc:identifier xsi:type="dcndl:ISBN">4-10-101001-3</dc:identifier><link>https://ndlsearch.ndl.go.jp/books/test</link></item></channel></rss>`;
+  const xml=`<rss xmlns:dcndl="http://ndl.go.jp/dcndl/terms/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><channel><item><dc:title>吾輩は猫である</dc:title><dc:creator>夏目漱石</dc:creator><dc:publisher>新潮社</dc:publisher><dcterms:issued>2003.6</dcterms:issued><dc:identifier xsi:type="dcndl:ISBN">4-10-101001-3</dc:identifier><link>https://ndlsearch.ndl.go.jp/books/test</link></item></channel></rss>`;
   const records=NdlBooks.parse(xml.replace('<dc:creator>夏目漱石</dc:creator>','<dc:creator>夏目, 漱石, 1867-1916</dc:creator><dc:creator>夏目漱石 著</dc:creator>'),'9784101010014');
   assert(records.length===1 && records[0].title==='吾輩は猫である' && records[0].author==='夏目漱石','XML extraction');
+  for(const volume of ['1','上巻','第2部']){
+    const withVolume=xml.replace('<dc:title>', '<dcndl:volume>'+volume+'</dcndl:volume><dc:title>');
+    assert(NdlBooks.parse(withVolume,'9784101010014')[0].volume===volume,'volume extraction: '+volume);
+  }
+  assert(records[0].volume==='', 'missing volume');
   assert(records[0].publishedDate==='' && records[0].issued==='2003.6','partial date');
   assert(NdlBooks.parse(xml,'9780140328721').length===0,'ISBN mismatch');
   assert(NdlBooks.fullDate('2024.2.29')==='2024-02-29' && NdlBooks.fullDate('2023.2.29')==='','date validation');

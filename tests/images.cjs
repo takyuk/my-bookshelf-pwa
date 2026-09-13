@@ -31,8 +31,9 @@ module.exports=async()=>{
   // Decode validation is covered by the browser suite; unit tests isolate archive logic.
   codec.fromFile=async file=>{const image=codec.sanitize(await file.arrayBuffer());return {...image,blob:new Blob([image.bytes],{type:image.type})};};
   const books=[{id:'a',title:'本',coverId:'cover-one'},{id:'b',title:'欠損',coverId:'missing'}];
+  books[0].volume='上巻';
   const out=await backup.exportZip(books);assert.equal(out.warnings.length,1);
-  const restored=await backup.importFile(out.blob);assert.equal(restored.books.length,2);assert.equal(restored.records.length,1);assert.notEqual(restored.books[0].coverId,'cover-one');assert.equal(restored.books[1].coverId,null);
+  const restored=await backup.importFile(out.blob);assert.equal(restored.books.length,2);assert.equal(restored.books[0].volume,'上巻');assert.equal(restored.records.length,1);assert.notEqual(restored.books[0].coverId,'cover-one');assert.equal(restored.books[1].coverId,null);
   assert.equal(Buffer.from(await restored.records[0].blob.arrayBuffer()).includes(Buffer.from('PRIVATE')),false);
   const legacy=await backup.importFile(new Blob([JSON.stringify({version:1,books})]));assert.equal(legacy.records.length,0);assert.equal(legacy.books[0].coverId,null);
   const bad=new JSZip();bad.file('bookshelf.json','{"version":99}');await assert.rejects(backup.importFile(new Blob([await bad.generateAsync({type:'uint8array'})])));
