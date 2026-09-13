@@ -124,11 +124,13 @@ const ImageCodec = (() => {
     const result=sanitize(await file.arrayBuffer());
     const blob=new Blob([result.bytes],{type:result.type});
     const url=URL.createObjectURL(blob);
+    let width,height;
     try {
       const img=new Image();img.src=url;await img.decode();
       if(!img.naturalWidth || img.naturalWidth*img.naturalHeight>60000000)throw new Error('画像は6,000万画素以下にしてください。');
+      width=img.naturalWidth;height=img.naturalHeight;
     }finally{URL.revokeObjectURL(url);}
-    return {...result,blob};
+    return {...result,blob,width,height};
   }
   return {sanitize,fromFile,MAX_BYTES,crc32};
 })();

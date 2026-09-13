@@ -1,1 +1,1 @@
-globalThis.BOOKSHELF_VERSION = {"commit":"e55f362f965e468becd8f58e68d82cc696d58690","label":"基準コミット e55f362（未コミット変更あり）"};
+globalThis.BOOKSHELF_VERSION = {"commit":"6745f46108576f821360a6c2ed2a8dad4970cd41","label":"基準コミット 6745f46（未コミット変更あり）"};

@@ -12,6 +12,7 @@ new vm.Script(sw);
   await require('./catalog.cjs')();
   await require('./relay-diagnostics.cjs')();
   await require('./images.cjs')();
+  require('./cover-geometry.cjs')();
   require("./pwa.cjs")();
   const handlers = {};
   const deleted = [];
@@ -21,14 +22,14 @@ new vm.Script(sw);
   const scope = 'https://example.test/books/';
   vm.runInNewContext(sw, {
     self:{location:{origin:'https://example.test'},registration:{scope},clients:{claim:async()=>{}},addEventListener:(name, fn)=>handlers[name]=fn},
-    caches:{open:async()=>cache,keys:async()=>['my-bookshelf-pwa-v3','my-bookshelf-pwa-v4','my-bookshelf-pwa-v5','my-bookshelf-pwa-v6','other-app'],delete:async key=>deleted.push(key)},
-    fetch:async()=>{if(networkResponse instanceof Error) throw networkResponse; return networkResponse;},
+    caches:{open:async()=>cache,keys:async()=>['my-bookshelf-pwa-v3','my-bookshelf-pwa-v4','my-bookshelf-pwa-v5','my-bookshelf-pwa-v6','my-bookshelf-pwa-v7','other-app'],delete:async key=>deleted.push(key)},
+    fetch:async()=>{if(networkResponse instanceof Error) throw networkResponse; return networkResponse.clone();},
     URL, Request, Response, setTimeout, clearTimeout,
   });
   let activation;
   handlers.activate({waitUntil:p=>activation=p});
   await activation;
-  assert.deepEqual(deleted,['my-bookshelf-pwa-v3','my-bookshelf-pwa-v4','my-bookshelf-pwa-v5']);
+  assert.deepEqual(deleted,['my-bookshelf-pwa-v3','my-bookshelf-pwa-v4','my-bookshelf-pwa-v5','my-bookshelf-pwa-v6']);
   async function get(file, mode='navigate'){
     let result;
     const pending=[];
@@ -38,7 +39,9 @@ new vm.Script(sw);
     return response;
   }
   assert.equal(await (await get('index.html')).text(),'new page');
+  for(const file of ['js/cover-correction.js','js/cover-worker.js','js/cover-geometry.js'])assert.equal(await (await get(file,'cors')).text(),'new page');
   networkResponse = Error('offline');
+  for(const file of ['js/cover-correction.js','js/cover-worker.js','js/cover-geometry.js'])assert.equal(await (await get(file,'cors')).text(),'new page');
   assert.equal(await (await get('index.html')).text(),'new page');
   entries.set('./index.html',new Response('offline shell'));
   assert.equal(await (await get('other-page')).text(),'offline shell');

@@ -49,15 +49,11 @@ function download(text, name, type='application/json'){
   setTimeout(()=>URL.revokeObjectURL(url), 1000);
 }
 
-function currentYearFinished(book){
-  if(book.status !== 'finished' || !book.finishedDate) return false;
-  return book.finishedDate.slice(0,4) === String(new Date().getFullYear());
-}
 function renderStats(){
   $('statTotal').textContent = books.length;
   $('statUnread').textContent = books.filter(b=>b.status==='unread').length;
   $('statReading').textContent = books.filter(b=>b.status==='reading').length;
-  $('statFinished').textContent = books.filter(currentYearFinished).length;
+  $('statFinished').textContent = books.filter(b=>b.status==='finished').length;
 }
 function filteredBooks(){
   const q = $('searchInput').value.trim().toLowerCase();

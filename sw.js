@@ -1,5 +1,5 @@
 // Increment this version whenever publishing changes to app files.
-const CACHE_NAME = 'my-bookshelf-pwa-v6';
+const CACHE_NAME = 'my-bookshelf-pwa-v7';
 const CACHE_PREFIX = 'my-bookshelf-pwa-';
 const APP_SHELL = [
   './',
@@ -12,6 +12,9 @@ const APP_SHELL = [
   './js/backup.js',
   './js/terms.js',
   './js/covers.js',
+  './js/cover-correction.js',
+  './js/cover-worker.js',
+  './js/cover-geometry.js',
   './vendor/jszip-3.10.1.min.js',
   './js/version.js',
   './js/app.js',
