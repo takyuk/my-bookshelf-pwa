@@ -64,14 +64,15 @@ function createRelay(fetcher=fetch, logger=console){
     const url=new URL(request.url);
     const origin=request.headers.get('Origin');
     const headers={'Content-Type':'text/xml; charset=utf-8','Cache-Control':'no-store','Vary':'Origin','X-Content-Type-Options':'nosniff'};
-    if(!allowedOrigin || origin!==allowedOrigin) return new Response('Forbidden',{status:403});
+    const failure=(status,code)=>new Response(JSON.stringify({error:{code}}),{status,headers:{...headers,'Content-Type':'application/json; charset=utf-8'}});
+    if(!allowedOrigin || origin!==allowedOrigin) return failure(403,'RELAY-403');
     headers['Access-Control-Allow-Origin']=allowedOrigin;
-    if(url.pathname!=='/api/ndl') return new Response('Not found',{status:404,headers});
+    if(url.pathname!=='/api/ndl') return failure(404,'RELAY-404');
     if(request.method==='OPTIONS') return new Response(null,{status:204,headers:{...headers,'Access-Control-Allow-Methods':'GET, OPTIONS'}});
-    if(request.method!=='GET') return new Response('Method not allowed',{status:405,headers});
+    if(request.method!=='GET') return failure(405,'RELAY-405');
     const isbn=normalize(url.searchParams.get('isbn'));
-    if(!isbn || [...url.searchParams.keys()].some(key=>key!=='isbn')) return new Response('Invalid ISBN',{status:400,headers});
-    if(waiting>=4) return new Response('Busy',{status:429,headers:{...headers,'Retry-After':'5'}});
+    if(!isbn || [...url.searchParams.keys()].some(key=>key!=='isbn')) return failure(400,'RELAY-400');
+    if(waiting>=4){headers['Retry-After']='5';return failure(429,'RELAY-429');}
     waiting++;
     const diagnostic={stage:'queue',upstreamStatus:null,receivedBytes:0,startedAt:Date.now(),timedOut:false};
     try {
@@ -80,7 +81,19 @@ function createRelay(fetcher=fetch, logger=console){
       const xml=await result;
       diagnostic.stage='response_create';
       return new Response(xml,{headers});
-    } catch(error){logFailure(error,diagnostic);return new Response('NDL unavailable',{status:502,headers});}
+    } catch(error){
+      logFailure(error,diagnostic);
+      let code='RELAY-INTERNAL';
+      if(diagnostic.stage==='upstream_status') code=diagnostic.upstreamStatus>=300 && diagnostic.upstreamStatus<400 ? 'NDL-REDIRECT' : 'NDL-'+diagnostic.upstreamStatus;
+      else if(diagnostic.timedOut || error?.name==='TimeoutError') code='NDL-TIMEOUT';
+      else if(diagnostic.stage==='response_size') code='NDL-TOO-LARGE';
+      else if(diagnostic.stage==='response_format') code='NDL-INVALID-RESPONSE';
+      else if(['upstream_fetch','response_read'].includes(diagnostic.stage)){
+        const internal=/different request|request context|I\/O on behalf|illegal invocation|incorrect.*this|this.*(binding|fetch)/i.test(String(error?.message || ''));
+        code=internal ? 'RELAY-INTERNAL' : 'NDL-NETWORK';
+      }
+      return failure(502,code);
+    }
     finally {waiting--;}
   };
 }

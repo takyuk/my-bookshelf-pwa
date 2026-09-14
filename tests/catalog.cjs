@@ -50,7 +50,7 @@ module.exports=async()=>{
     window:{addEventListener(){}},location:{hostname:'127.0.0.1',href:'http://127.0.0.1:8002/'},isSecureContext:true,
     navigator:{mediaDevices:{getUserMedia:()=>new Promise(resolve=>grant=resolve)}},
     ZXingBrowser:{BrowserMultiFormatOneDReader:class{async decodeFromStream(s,v,cb){callback=cb;return {stop(){controlsStopped++;}};}}},
-    BookISBN:isbn,NdlBooks:{parse:()=>[]},AbortController,URL,fetch:async()=>new Response('<rss/>'),setTimeout,clearTimeout,
+    TypeError,BookISBN:isbn,NdlBooks:{parse:()=>[]},AbortController,URL,fetch:async()=>new Response('<rss/>'),setTimeout,clearTimeout,
   });
   vm.runInContext(fs.readFileSync(path.join(__dirname,'../js/catalog.js'),'utf8'),context);
   const starting=el('scanIsbnBtn').listeners.click();
@@ -82,5 +82,26 @@ module.exports=async()=>{
   const pending=el('lookupIsbnBtn').listeners.click();
   el('volume').value='下巻';finish(new Response('<rss/>'));await pending;
   assert.equal(el('volume').value,'下巻');
+  for(const code of ['NDL-400','NDL-401','NDL-403','NDL-404','NDL-429','NDL-503','NDL-418','NDL-REDIRECT','NDL-TIMEOUT','NDL-NETWORK','NDL-TOO-LARGE','NDL-INVALID-RESPONSE','RELAY-INTERNAL']){
+    context.fetch=async()=>new Response(JSON.stringify({error:{code}}),{status:502});
+    await el('lookupIsbnBtn').listeners.click();
+    assert.ok(el('catalogStatus').textContent.includes('【'+code+'】'),code);
+    assert.equal(el('volume').value,'下巻');
+  }
+  for(const status of [400,403,404,405,429,500,502,503,504,418]){
+    context.fetch=async()=>new Response('legacy error',{status});
+    await el('lookupIsbnBtn').listeners.click();
+    assert.ok(el('catalogStatus').textContent.includes('【RELAY-'+(status===418?'UNKNOWN':status)+'】'));
+  }
+  context.fetch=async()=>{throw new TypeError('network');};
+  await el('lookupIsbnBtn').listeners.click();assert.ok(el('catalogStatus').textContent.includes('APP-CONNECTION'));
+  context.fetch=async()=>{const error=new Error();error.name='AbortError';throw error;};
+  await el('lookupIsbnBtn').listeners.click();assert.ok(el('catalogStatus').textContent.includes('APP-TIMEOUT'));
+  context.fetch=async()=>new Response('<rss/>');context.NdlBooks.parse=()=>{throw Error('invalid');};
+  await el('lookupIsbnBtn').listeners.click();assert.ok(el('catalogStatus').textContent.includes('NDL-INVALID-RESPONSE'));
+  context.NdlBooks.parse=()=>[];
+  await el('lookupIsbnBtn').listeners.click();assert.ok(el('catalogStatus').textContent.includes('NDL-NOT-FOUND'));
+  context.BOOKSHELF_CATALOG={endpoint:'https://['};
+  await el('lookupIsbnBtn').listeners.click();assert.ok(el('catalogStatus').textContent.includes('APP-CONFIG'));
   console.log('PASS: ISBN checksums, relay validation/cache/errors, camera cancellation, two-read confirmation and cleanup');
 };
