@@ -6,6 +6,11 @@ const root = path.join(__dirname, '..');
 const sw = fs.readFileSync(path.join(root,"sw.js"),"utf8");
 for(const file of fs.readdirSync(path.join(root,"js"))) new vm.Script(fs.readFileSync(path.join(root,"js",file),"utf8"));
 new vm.Script(sw);
+const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
+for(const [,file] of html.matchAll(/<script defer src="\.\/([^"]+)"/g)){
+  assert.ok(fs.existsSync(path.join(root,file)),file+' exists');
+  assert.ok(sw.includes("'./"+file+"'"),file+' is precached');
+}
 (async()=>{
   await require("./storage.cjs")();
   await require("./continuous-entry.cjs")();
@@ -40,9 +45,9 @@ new vm.Script(sw);
     return response;
   }
   assert.equal(await (await get('index.html')).text(),'new page');
-  for(const file of ['js/cover-correction.js','js/cover-worker.js','js/cover-geometry.js'])assert.equal(await (await get(file,'cors')).text(),'new page');
+  for(const file of ["js/cover-correction.js","js/cover-worker.js","js/cover-geometry.js","js/book-list.js","js/book-editor.js","js/backup-actions.js","js/catalog-errors.js","js/catalog-client.js","js/isbn-scanner.js"])assert.equal(await (await get(file,'cors')).text(),'new page');
   networkResponse = Error('offline');
-  for(const file of ['js/cover-correction.js','js/cover-worker.js','js/cover-geometry.js'])assert.equal(await (await get(file,'cors')).text(),'new page');
+  for(const file of ["js/cover-correction.js","js/cover-worker.js","js/cover-geometry.js","js/book-list.js","js/book-editor.js","js/backup-actions.js","js/catalog-errors.js","js/catalog-client.js","js/isbn-scanner.js"])assert.equal(await (await get(file,'cors')).text(),'new page');
   assert.equal(await (await get('index.html')).text(),'new page');
   entries.set('./index.html',new Response('offline shell'));
   assert.equal(await (await get('other-page')).text(),'offline shell');

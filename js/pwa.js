@@ -1,3 +1,4 @@
+const BookPwa = {init({$,dialog,isBusy}){
 let deferredInstallPrompt = null;
 const installBtn = $('installBtn');
 const installNote = $('installNote');
@@ -44,7 +45,7 @@ if('serviceWorker' in navigator && location.protocol.startsWith('http')) {
   let hadController = !!navigator.serviceWorker.controller;
   function reloadForUpdate(){
     if(refreshing) return;
-    if(dialog.open || busy){ pendingReload = true; return; }
+    if(dialog.open || isBusy()){ pendingReload = true; return; }
     refreshing = true;
     location.reload();
   }
@@ -66,3 +67,5 @@ if('serviceWorker' in navigator && location.protocol.startsWith('http')) {
   });
 }
 updateInstallUI();
+
+}};

@@ -52,7 +52,7 @@ module.exports=async()=>{
     ZXingBrowser:{BrowserMultiFormatOneDReader:class{async decodeFromStream(s,v,cb){callback=cb;return {stop(){controlsStopped++;}};}}},
     TypeError,BookISBN:isbn,NdlBooks:{parse:()=>[]},AbortController,URL,fetch:async()=>new Response('<rss/>'),setTimeout,clearTimeout,
   });
-  vm.runInContext(fs.readFileSync(path.join(__dirname,'../js/catalog.js'),'utf8'),context);
+  for(const file of ['catalog-errors','catalog-client','isbn-scanner','catalog']) vm.runInContext(fs.readFileSync(path.join(__dirname,'../js/'+file+'.js'),'utf8'),context);
   const starting=el('scanIsbnBtn').listeners.click();
   el('stopScanBtn').listeners.click();
   grant({getTracks:()=>[{stop:()=>stopped++}]});await starting;

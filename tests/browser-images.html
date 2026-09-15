@@ -8,7 +8,7 @@
   try{
     await wait(()=>frame.contentDocument?.getElementById('acceptTerms'));
     const w=frame.contentWindow,d=w.document;
-    await wait(()=>{try{return w.eval('typeof BookCovers')!=='undefined';}catch{return false;}});
+    await wait(()=>{try{return w.eval('typeof covers')!=='undefined';}catch{return false;}});
     if(w.localStorage.getItem('my-bookshelf-v1')!==null)throw Error('既存の書籍があるため検証を停止しました。専用の空のポートで実行してください。');
     const termsBefore=w.localStorage.getItem('my-bookshelf-terms');
     if(!w.eval('Terms.allowed()')){
@@ -44,7 +44,7 @@
     }
     d.getElementById('addBookBtn').click();d.getElementById('title').value='書影テスト';
     const transfer=new w.DataTransfer();transfer.items.add(sample);d.getElementById('fileCoverInput').files=transfer.files;d.getElementById('fileCoverInput').dispatchEvent(new Event('change'));
-    await wait(()=>!w.eval('BookCovers.loading()'));ok(!d.getElementById('coverPreview').hidden,'選択画像のプレビュー');
+    await wait(()=>!w.eval('covers.loading()'));ok(!d.getElementById('coverPreview').hidden,'選択画像のプレビュー');
     d.getElementById('bookForm').requestSubmit();await wait(()=>!d.getElementById('bookDialog').open);
     await wait(()=>d.querySelector('.cover img')?.complete);ok(true,'書籍と画像の保存・本棚表示');
     const books=JSON.parse(w.localStorage.getItem('my-bookshelf-v1'));ok(!!(await images.get(books[0].coverId))?.blob,'IndexedDBに画像保存');

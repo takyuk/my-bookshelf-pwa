@@ -6,7 +6,7 @@ module.exports=()=>{
   const handlers={};let reloads=0;
   const element={classList:{add(){},remove(){}},addEventListener(){}};
   const dialog={open:false,addEventListener:(name,fn)=>handlers[name]=fn};
-  vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../js/pwa.js'),'utf8'),{
+  vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../js/pwa.js'),'utf8')+'\nBookPwa.init({$,dialog,isBusy:()=>busy});',{
     $:()=>element,dialog,busy:false,document:{addEventListener(){}},
     navigator:{serviceWorker:{controller:null,addEventListener:(name,fn)=>handlers[name]=fn}},
     window:{addEventListener(){},matchMedia:()=>({matches:false}),navigator:{}},

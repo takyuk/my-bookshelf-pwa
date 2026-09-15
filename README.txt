@@ -156,3 +156,14 @@ Android実機での指による四隅調整、様々な背景・表紙での検�
 - エラー末尾のNDLは国会図書館への取得、RELAYは中継サービス、APPはアプリ側の通信・設定を表します。HTTP番号のみから混雑や制限の原因を断定しません。
 - 原因別表示を公開版で使うには、アプリの公開に加えて npx wrangler deploy --config proxy/wrangler.toml による中継APIの再公開が必要です。旧中継APIではRELAY-502など詳細不明の表示になります。
 - 中継エラーはJSONのerror.codeで返し、成功時は従来どおりXMLを返します。生の応答本文や例外メッセージは画面に表示しません。
+
+保守用の構成（画面と保存形式は変更なし）
+- app.js：アプリ状態、保存処理の連携、各画面部品の初期化。
+- book-list.js：一覧・検索条件・並び替え・集計表示。
+- book-editor.js：追加・編集・通常保存・連続入力・削除。
+- backup-actions.js：バックアップの読み込み／書き出しの画面操作。形式処理は従来のbackup.js。
+- covers.js：BookCoverUI.createへisBusy関数を渡して書影画面を初期化。
+- pwa.js：BookPwa.initへ要素取得、編集ダイアログ、isBusy関数を渡して更新制御を初期化。
+- catalog.js：検索画面と自動入力の制御。catalog-client.jsが通信・応答解析、catalog-errors.jsがエラー文言、isbn-scanner.jsがカメラの開始・停止・ISBN検出を担当。
+- 各部品へ最新状態を読む関数を渡す。編集前スナップショット、保存順序、キャンセル時の古い結果の破棄は維持する。
+- JavaScript追加時はindex.htmlの読込順とsw.jsのAPP_SHELLも更新する。公開時のキャッシュ名は従来どおりコミットIDから生成する。
