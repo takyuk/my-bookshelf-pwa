@@ -59,7 +59,7 @@
       if(id===requestId) message(error.name==='AbortError' ? errorText('APP-TIMEOUT') : (error instanceof TypeError ? errorText('APP-CONNECTION') : error.message));
     } finally {clearTimeout(timeout);if(id===requestId){lookupButton.disabled=false;abortController=null;}}
   }
-  const scanner=IsbnScanner.create({scanButton,panel,video,formDialog,message,beforeStart:cancelLookup,onISBN:isbn=>{isbnInput.value=isbn;lookup();}});
+  const scanner=IsbnScanner.create({scanButton,panel,video,formDialog,message,beforeStart:cancelLookup,onISBN:isbn=>{isbnInput.value=isbn;isbnInput.dispatchEvent(new Event('input',{bubbles:true}));lookup();}});
   function stopCamera(){scanner.stop();}
   scanButton.addEventListener('click',scanner.start);
   lookupButton.addEventListener('click',lookup);

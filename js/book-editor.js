@@ -38,6 +38,7 @@ form.addEventListener('submit', async (e)=>{
   const book={
     id,
     coverId:covers.id(),
+    ...covers.remoteData(),
     title:$('title').value.trim(), volume:$('volume').value.trim(), author:$('author').value.trim(), isbn:$('isbn').value.trim(), publisher:$('publisher').value.trim(),
     publishedDate:$('publishedDate').value, purchaseDate:$('purchaseDate').value, price:$('price').value ? Number($('price').value) : null,
     format:$('format').value, location:$('location').value.trim(), status:$('status').value, startedDate:$('startedDate').value,

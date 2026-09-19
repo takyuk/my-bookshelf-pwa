@@ -167,3 +167,12 @@ Android実機での指による四隅調整、様々な背景・表紙での検�
 - catalog.js：検索画面と自動入力の制御。catalog-client.jsが通信・応答解析、catalog-errors.jsがエラー文言、isbn-scanner.jsがカメラの開始・停止・ISBN検出を担当。
 - 各部品へ最新状態を読む関数を渡す。編集前スナップショット、保存順序、キャンセル時の古い結果の破棄は維持する。
 - JavaScript追加時はindex.htmlの読込順とsw.jsのAPP_SHELLも更新する。公開時のキャッシュ名は従来どおりコミットIDから生成する。
+
+Google Books書影（実装）
+- 書誌情報は従来どおり国会図書館。Google書影は専用ボタンで検索します。
+- 撮影・選択画像を優先します。書影削除はGoogle URLも解除し、共通画像へ戻します。ISBN変更時は以前のGoogle書影を解除します。
+- Google書影のみ当該書籍ページへのリンクと指定の帰属表示を付けます。取得失敗・書影なし・オフラインは共通画像を表示します。
+- ZIPは端末内の画像本体とGoogleのURL情報を保存します。Google画像は含めません。旧ZIPは従来どおり復元できます。
+- 起動時に利用規約第2版への同意が必要です。キー設定と中継公開はproxy/README.mdを参照してください。
+- 変更前の復元用ZIP：dist/backups/before-google-covers-1e68261/committed-source.zip（Git対象外）。登録書籍データは別途アプリからバックアップしてください。
+- Google帰属画像は公式配布 https://books.google.com/googlebooks/images/poweredby.png を変更せず同梱しています。

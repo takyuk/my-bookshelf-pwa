@@ -13,6 +13,7 @@ for(const [,file] of html.matchAll(/<script defer src="\.\/([^"]+)"/g)){
 }
 (async()=>{
   await require("./storage.cjs")();
+  await require("./google-covers.cjs")();
   await require("./continuous-entry.cjs")();
   await require('./recovery-ui.cjs')();
   await require('./catalog.cjs')();

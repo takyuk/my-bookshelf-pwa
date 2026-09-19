@@ -4,8 +4,8 @@ const path=require('node:path');
 const vm=require('node:vm');
 const JSZip=require('../vendor/jszip-3.10.1.min.js');
 module.exports=async()=>{
-  const context=vm.createContext({Uint8Array,DataView,Blob,TextEncoder,TextDecoder,JSZip,crypto:require('node:crypto').webcrypto});
-  for(const name of ['validation','image-codec','backup','storage'])vm.runInContext(fs.readFileSync(path.join(__dirname,`../js/${name}.js`),'utf8'),context);
+  const context=vm.createContext({URL,Uint8Array,DataView,Blob,TextEncoder,TextDecoder,JSZip,crypto:require('node:crypto').webcrypto});
+  for(const name of ['isbn','google-cover-data','validation','image-codec','backup','storage'])vm.runInContext(fs.readFileSync(path.join(__dirname,`../js/${name}.js`),'utf8'),context);
   const codec=vm.runInContext('ImageCodec',context),backup=vm.runInContext('BookBackup',context);
   // Two IFD entries (orientation and private artist), with a GPS/sub-IFD tail.
   const tiff=Buffer.alloc(68);tiff.write('II');tiff.writeUInt16LE(42,2);tiff.writeUInt32LE(8,4);tiff.writeUInt16LE(2,8);
@@ -32,8 +32,9 @@ module.exports=async()=>{
   codec.fromFile=async file=>{const image=codec.sanitize(await file.arrayBuffer());return {...image,blob:new Blob([image.bytes],{type:image.type})};};
   const books=[{id:'a',title:'本',coverId:'cover-one'},{id:'b',title:'欠損',coverId:'missing'}];
   books[0].volume='上巻';
+  books[1].isbn='9784101010014';books[1].googleCover={isbn:books[1].isbn,id:'test123',url:'https://books.google.com/books?id=test123&img=1',link:'https://books.google.com/books?id=test123'};
   const out=await backup.exportZip(books);assert.equal(out.warnings.length,1);
-  const restored=await backup.importFile(out.blob);assert.equal(restored.books.length,2);assert.equal(restored.books[0].volume,'上巻');assert.equal(restored.records.length,1);assert.notEqual(restored.books[0].coverId,'cover-one');assert.equal(restored.books[1].coverId,null);
+  const restored=await backup.importFile(out.blob);assert.equal(restored.books.length,2);assert.equal(restored.books[1].googleCover.url,books[1].googleCover.url);assert.equal(restored.books[0].volume,'上巻');assert.equal(restored.records.length,1);assert.notEqual(restored.books[0].coverId,'cover-one');assert.equal(restored.books[1].coverId,null);
   assert.equal(Buffer.from(await restored.records[0].blob.arrayBuffer()).includes(Buffer.from('PRIVATE')),false);
   const legacy=await backup.importFile(new Blob([JSON.stringify({version:1,books})]));assert.equal(legacy.records.length,0);assert.equal(legacy.books[0].coverId,null);
   const bad=new JSZip();bad.file('bookshelf.json','{"version":99}');await assert.rejects(backup.importFile(new Blob([await bad.generateAsync({type:'uint8array'})])));

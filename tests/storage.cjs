@@ -4,7 +4,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 module.exports = async () => {
   const context = vm.createContext({});
-  for(const name of ['validation','storage']) vm.runInContext(fs.readFileSync(path.join(__dirname,`../js/${name}.js`),'utf8'),context);
+  for(const name of ['isbn','google-cover-data','validation','storage']) vm.runInContext(fs.readFileSync(path.join(__dirname,`../js/${name}.js`),'utf8'),context);
   const api = vm.runInContext('BookStorage',context);
   const validate = vm.runInContext('validateBooks',context);
   const valid = {id:'one',title:'本',rating:3,tags:[],status:'unread'};

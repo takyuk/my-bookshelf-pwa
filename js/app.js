@@ -76,3 +76,6 @@ $('closePhotoHelp').addEventListener('click',()=>$('photoHelpDialog').close());
 
 $('showIsbnHelp').addEventListener('click',()=>$('isbnHelpDialog').showModal());
 $('closeIsbnHelp').addEventListener('click',()=>$('isbnHelpDialog').close());
+
+window.addEventListener('online',refreshBooks);
+window.addEventListener('offline',refreshBooks);

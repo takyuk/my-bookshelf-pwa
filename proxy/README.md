@@ -60,3 +60,12 @@ Wrangler自身のアクセスログにはリクエストURL（ISBNを含む）�
 - `node tests/regression.cjs`：ISBN・中継・カメラの中止と終了処理を含む自動チェック。
 - ローカルの `/tests/browser-catalog.html`：実ブラウザでXML解析とEAN-13画像の復号を検証。
 - スマホ実機：許可/拒否、背面カメラ、上下2段のバーコード、明るさ、読み取り中止、画面を閉じた後のカメラ終了を確認。
+
+## Google Books書影検索
+Google CloudでBooks APIを有効にしたキーを、Worker Secret GOOGLE_BOOKS_API_KEY に登録してください。
+
+`npx wrangler secret put GOOGLE_BOOKS_API_KEY --config proxy/wrangler.toml`
+
+その後 `npx wrangler deploy --config proxy/wrangler.toml` で公開します。キーをGitやブラウザに記載しないでください。Google Cloud側でBooks APIへのAPI制限と割当量を設定してください。
+ローカルでは環境変数 GOOGLE_BOOKS_API_KEY を設定して scripts/serve.cjs を起動します。未設定でも書籍の編集・NDL検索は動き、Google書影検索だけ設定案内を表示します。
+/api/google-cover?isbn=... は書影URLと書籍ID・リンクだけを返します。ISBN一致確認、応答1MB制限、12秒タイムアウトがあり、画像は中継・保存しません。取得失敗の再試行はボタンから行います。

@@ -1,0 +1,23 @@
+<!doctype html><meta charset="utf-8"><title>Google書影検証</title><h1>Google書影・画面連携検証</h1><pre id="result">実行中…</pre><iframe id="app" src="../index.html" style="width:390px;height:760px"></iframe><script>
+(async()=>{
+ const out=document.getElementById('result'),frame=document.getElementById('app'),wait=async fn=>{for(let i=0;i<300;i++){if(fn())return;await new Promise(r=>setTimeout(r,30));}throw Error('タイムアウト');},ok=(x,label)=>{if(!x)throw Error(label);out.textContent+='\nPASS '+label;};
+ try{
+ await wait(()=>{try{return frame.contentWindow.eval('typeof covers')!=='undefined';}catch{return false;}});
+ const w=frame.contentWindow,d=w.document;if(w.localStorage.getItem('my-bookshelf-v1')!==null)throw Error('既存データあり。別ポートで実行してください。');const consent=w.localStorage.getItem('my-bookshelf-terms');
+ if(!w.eval('Terms.allowed()')){d.getElementById('termsCheck').checked=true;d.getElementById('termsCheck').dispatchEvent(new Event('change'));d.getElementById('acceptTerms').click();}
+ const cover={isbn:'9784101010014',id:'test123',url:'https://books.google.com/books?id=test123&img=1',link:'https://books.google.com/books?id=test123'};
+ w.fetch=async()=>new w.Response(JSON.stringify({cover}),{headers:{'Content-Type':'application/json'}});
+ d.getElementById('addBookBtn').click();d.getElementById('isbn').value=cover.isbn;d.getElementById('title').value='Google書影テスト';d.getElementById('searchGoogleCover').click();await wait(()=>w.eval('covers.remoteData().googleCover')!==null);
+ ok(d.getElementById('title').value==='Google書影テスト','書誌情報を変更しない');
+ ok(w.eval('covers.records().length')===0,'Google画像を保存用Blobにしない');
+ d.getElementById('bookForm').requestSubmit();await wait(()=>!d.getElementById('bookDialog').open);
+ const books=JSON.parse(w.localStorage.getItem('my-bookshelf-v1'));ok(books[0].googleCover.url===cover.url&&!books[0].coverId,'URLのみ保存');
+ const backup=w.eval('BookBackup'),zip=await backup.exportZip(books),restored=await backup.importFile(zip.blob);ok(restored.records.length===0&&restored.books[0].googleCover.url===cover.url,'ZIP復元もURLのみ');
+ d.querySelector('.card-hit').click();d.getElementById('isbn').value='9784088725093';d.getElementById('isbn').dispatchEvent(new Event('input'));ok(!w.eval('covers.remoteData().googleCover'),'ISBN変更で古い書影解除');
+ w.fetch=async()=>new w.Response(JSON.stringify({cover:null}));d.getElementById('searchGoogleCover').click();await wait(()=>d.getElementById('googleCoverStatus').textContent.includes('見つかりません'));
+ ok(!!d.querySelector('#googleCoverPreview .cover-placeholder'),'書影なしで共通画像');
+ w.fetch=async()=>new w.Response(JSON.stringify({error:'GOOGLE-CONFIG'}),{status:503});d.getElementById('searchGoogleCover').click();await wait(()=>d.getElementById('googleCoverStatus').textContent.includes('APIキー'));
+ ok(!!d.querySelector('#googleCoverPreview .cover-placeholder'),'取得失敗で共通画像と設定案内');
+ d.getElementById('cancelBtn').click();w.localStorage.removeItem('my-bookshelf-v1');if(consent===null)w.localStorage.removeItem('my-bookshelf-terms');else w.localStorage.setItem('my-bookshelf-terms',consent);frame.remove();out.textContent+='\nALL PASS（API応答はテスト用、テストデータ削除済み）';
+ }catch(e){out.textContent+='\nFAIL '+e.message;}
+})();</script>

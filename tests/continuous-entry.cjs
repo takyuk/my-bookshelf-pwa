@@ -8,7 +8,7 @@ module.exports=async()=>{
   $('bookForm').reset=()=>{resets++;for(const field of fields.values())field.value='';};
   $('bookForm').querySelector=()=>({scrollTop:200});
   $('title').value='新しい本';
-  const options={$,getBooks:()=>[],isBusy:()=>false,hasStorageError:()=>false,store:{snapshot:()=> 'snapshot'},covers:{loading:()=>false,id:()=>null,records:()=>[],reset(){}},refreshBooks(){},saveBooks:async books=>{saved=books;return success;},render(){},uid:()=> 'new-id',terms:{allowed:()=>true}};
+  const options={$,getBooks:()=>[],isBusy:()=>false,hasStorageError:()=>false,store:{snapshot:()=> 'snapshot'},covers:{remoteData:()=>({}),loading:()=>false,id:()=>null,records:()=>[],reset(){}},refreshBooks(){},saveBooks:async books=>{saved=books;return success;},render(){},uid:()=> 'new-id',terms:{allowed:()=>true}};
   vm.runInNewContext(source+'\nBookEditor.create(options);',{options,document:{dispatchEvent(){}},Event,alert(){}});
   await $('bookForm').listeners.submit({preventDefault(){},submitter:{id:submitter}});
   assert.equal(saved[0].title,'新しい本');assert.equal(resets,success&&submitter==='saveNextBtn'?1:0);assert.equal(closed,success&&submitter==='saveBookBtn'?1:0);

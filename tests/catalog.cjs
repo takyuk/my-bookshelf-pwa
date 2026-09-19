@@ -43,14 +43,14 @@ module.exports=async()=>{
   assert.equal((await huge(request(),origin)).status,502);
   // Exercise the actual camera controller with deferred permission and decoder callbacks.
   const elements=new Map(), events={};
-  const el=id=>{if(!elements.has(id))elements.set(id,{value:'',checked:false,open:true,hidden:false,listeners:{},addEventListener(n,fn){this.listeners[n]=fn;},replaceChildren(){},appendChild(){}});return elements.get(id);};
+  const el=id=>{if(!elements.has(id))elements.set(id,{value:'',checked:false,open:true,hidden:false,listeners:{},addEventListener(n,fn){this.listeners[n]=fn;},dispatchEvent(event){this.listeners[event.type]?.(event);},replaceChildren(){},appendChild(){}});return elements.get(id);};
   let grant, stopped=0, controlsStopped=0, callback;
   const context=vm.createContext({
     document:{getElementById:el,addEventListener:(n,fn)=>events[n]=fn,createElement:()=>({addEventListener(){}})},
     window:{addEventListener(){}},location:{hostname:'127.0.0.1',href:'http://127.0.0.1:8002/'},isSecureContext:true,
     navigator:{mediaDevices:{getUserMedia:()=>new Promise(resolve=>grant=resolve)}},
     ZXingBrowser:{BrowserMultiFormatOneDReader:class{async decodeFromStream(s,v,cb){callback=cb;return {stop(){controlsStopped++;}};}}},
-    TypeError,BookISBN:isbn,NdlBooks:{parse:()=>[]},AbortController,URL,fetch:async()=>new Response('<rss/>'),setTimeout,clearTimeout,
+    Event,TypeError,BookISBN:isbn,NdlBooks:{parse:()=>[]},AbortController,URL,fetch:async()=>new Response('<rss/>'),setTimeout,clearTimeout,
   });
   for(const file of ['catalog-errors','catalog-client','isbn-scanner','catalog']) vm.runInContext(fs.readFileSync(path.join(__dirname,'../js/'+file+'.js'),'utf8'),context);
   const starting=el('scanIsbnBtn').listeners.click();
