@@ -25,7 +25,7 @@ const APP_SHELL = [
   './js/isbn-scanner.js',
   './js/google-cover-data.js',
   './js/google-covers.js',
-  './icons/cover-unavailable.svg',
+  './icons/cover-unavailable.png',
   './icons/powered-by-google.png',
   './js/app.js',
   './js/pwa.js',

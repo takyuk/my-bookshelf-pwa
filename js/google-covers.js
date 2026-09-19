@@ -1,5 +1,5 @@
 const GoogleCovers=(()=>{
- const placeholder='./icons/cover-unavailable.svg';
+ const placeholder='./icons/cover-unavailable.png';
  const logo='./icons/powered-by-google.png';
  function fallback(container,message){
   const image=document.createElement('img');image.src=placeholder;image.alt='書影なし';image.className='cover-placeholder';
