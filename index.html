@@ -49,11 +49,21 @@
         <option value="finished">読了</option>
         <option value="paused">中断</option>
       </select>
+      <select id="ratingFilter" aria-label="評価で絞り込み">
+        <option value="all">評価：すべて</option>
+        <option value="5">★★★★★</option>
+        <option value="4">★★★★</option>
+        <option value="3">★★★</option>
+        <option value="2">★★</option>
+        <option value="1">★</option>
+        <option value="0">未評価</option>
+      </select>
       <select id="sortSelect" aria-label="並べ替え">
         <option value="updated_desc">更新順</option>
         <option value="title_asc">タイトル順</option>
         <option value="author_asc">著者順</option>
         <option value="finished_desc">読了日順</option>
+        <option value="rating_desc">評価が高い順</option>
       </select>
     </section>
 

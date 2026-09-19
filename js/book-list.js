@@ -10,11 +10,13 @@ function renderStats(){
 function filteredBooks(){
   const q = $('searchInput').value.trim().toLowerCase();
   const status = $('statusFilter').value;
+  const rating = $('ratingFilter').value;
   let list = getBooks().filter(b => {
     const hay = [b.title,b.volume,b.author,b.isbn,b.publisher,b.location,(b.tags||[]).join(' ')].join(' ').toLowerCase();
-    return (!q || hay.includes(q)) && (status==='all' || b.status===status);
+    return (!q || hay.includes(q)) && (status==='all' || b.status===status) && (rating==='all' || Number(b.rating||0)===Number(rating));
   });
   switch($('sortSelect').value){
+    case 'rating_desc': list.sort((a,b)=>Number(b.rating||0)-Number(a.rating||0) || (b.updatedAt||'').localeCompare(a.updatedAt||'')); break;
     case 'title_asc': list.sort((a,b)=>a.title.localeCompare(b.title,'ja')); break;
     case 'author_asc': list.sort((a,b)=>(a.author||'').localeCompare(b.author||'','ja')); break;
     case 'finished_desc': list.sort((a,b)=>(b.finishedDate||'').localeCompare(a.finishedDate||'')); break;

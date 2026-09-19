@@ -53,7 +53,7 @@ BackupActions.init({$,getBooks:()=>books,isBusy:()=>busy,hasStorageError:()=>sto
 BookPwa.init({$,dialog,isBusy:()=>busy});
 function render(){list.render();}
 
-['searchInput','statusFilter','sortSelect'].forEach(id=>$(id).addEventListener('input',render));
+['searchInput','statusFilter','ratingFilter','sortSelect'].forEach(id=>$(id).addEventListener('input',render));
 
 $('retryBtn').addEventListener('click', refreshBooks);
 $('rescueBtn').addEventListener('click', ()=>{
