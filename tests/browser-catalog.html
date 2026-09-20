@@ -1,6 +1,6 @@
 <!doctype html><html lang="ja"><meta charset="utf-8"><title>書誌・バーコード実装テスト</title>
 <h1>書誌・バーコード実装テスト</h1><p id="result" role="status">実行中</p><canvas id="barcode" width="351" height="180"></canvas>
-<script src="../js/isbn.js"></script><script src="../js/ndl.js"></script><script src="../vendor/zxing-browser-0.2.1.min.js"></script>
+<script src="../js/isbn.js"></script><script src="../js/validation.js"></script><script src="../js/ndl.js"></script><script src="../vendor/zxing-browser-0.2.1.min.js"></script>
 <script>
 try {
   const assert=(ok,message)=>{if(!ok)throw Error(message);};
@@ -12,7 +12,7 @@ try {
     assert(NdlBooks.parse(withVolume,'9784101010014')[0].volume===volume,'volume extraction: '+volume);
   }
   assert(records[0].volume==='', 'missing volume');
-  assert(records[0].publishedDate==='' && records[0].issued==='2003.6','partial date');
+  assert(records[0].publishedDate==='2003-06' && records[0].issued==='2003.6','partial date');
   assert(NdlBooks.parse(xml,'9780140328721').length===0,'ISBN mismatch');
   assert(NdlBooks.fullDate('2024.2.29')==='2024-02-29' && NdlBooks.fullDate('2023.2.29')==='','date validation');
   let rejected=false;try{NdlBooks.parse('<rss>','9784101010014');}catch{rejected=true;}assert(rejected,'malformed XML');

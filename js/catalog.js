@@ -26,7 +26,7 @@
     }
     const source=byId('catalogSource');source.hidden=!book.source;
     if(book.source){source.href=book.source;source.textContent='出典：国立国会図書館サーチ';}
-    message(`${filled}項目を自動入力しました。内容を確認して「保存」を押してください。${book.issued && !book.publishedDate ? ` 刊行情報：${book.issued}（日付が確定しないため刊行日は未入力）` : ''}${!overwrite ? ' 入力済みの項目は保持しています。' : ''}`);
+    message(`${filled}項目を自動入力しました。内容を確認して「保存」を押してください。${book.issued && !book.publishedDate ? ` 刊行情報：${book.issued}（年月が確定しないため刊行年月の自動入力は省略）` : ''}${!overwrite ? ' 入力済みの項目は保持しています。' : ''}`);
     candidates.replaceChildren();
   }
   async function lookup(){

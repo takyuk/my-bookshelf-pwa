@@ -57,12 +57,11 @@ dialog{border:0;border-radius:20px;width:min(760px,calc(100vw - 24px));max-heigh
 #bookForm .isbn-tools,#bookForm .cover-tools{padding:10px;margin-bottom:12px}
 .cover-tools-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px;margin-bottom:8px}
 .cover-tools-head h3{margin:0}
-#showPhotoHelp{padding:8px;font-size:.75rem}
+#showPhotoHelp{padding:8px;font-size:.75rem;color:#175db5;text-decoration:underline}
 #coverStatus:empty{display:none}
 #bookForm #coverPreview{max-height:120px}
 
 .isbn-camera-actions{display:inline-flex;align-items:center;gap:8px;max-width:100%}
-#showIsbnHelp{padding:8px;font-size:.75rem}
 
 /* Keep Save as the default Enter-key action while displaying continuous entry between the buttons. */
 #cancelBtn{order:1}

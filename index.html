@@ -96,7 +96,7 @@
       <input id="bookId" type="hidden" />
       <section class="isbn-tools" aria-label="ISBNから自動入力">
         <div class="isbn-actions">
-          <span class="isbn-camera-actions"><button type="button" id="scanIsbnBtn" class="ghost">カメラでISBNを読む</button><button type="button" id="showIsbnHelp" class="ghost" aria-haspopup="dialog">ISBNの注意事項</button></span>
+          <span class="isbn-camera-actions"><button type="button" id="scanIsbnBtn" class="ghost">カメラでISBNを読む</button></span>
           <button type="button" id="lookupIsbnBtn" class="ghost">ISBNで書誌検索</button>
         </div>
         <label class="overwrite-option"><input id="overwriteBibliography" type="checkbox" /> 入力済みの書誌情報も置き換える</label>
@@ -111,7 +111,7 @@
         <a id="catalogSource" target="_blank" rel="noopener noreferrer" hidden>出典：国立国会図書館サーチ</a>
       </section>
       <section class="cover-tools" aria-label="書影の登録">
-        <div class="cover-tools-head"><h3>書影（1冊につき1枚）</h3><button type="button" id="showPhotoHelp" class="ghost" aria-haspopup="dialog">画像の注意事項</button></div>
+        <div class="cover-tools-head"><h3>書影（1冊につき1枚）</h3><a id="showPhotoHelp" href="#photoHelpDialog" aria-haspopup="dialog" aria-controls="photoHelpDialog">書影画像の取り扱い</a></div>
         <div class="google-search"><button type="button" id="searchGoogleCover" class="ghost">Google Booksで書影を検索</button><img class="google-brand" src="./icons/powered-by-google.png" alt="Powered by Google" /></div>
         <p id="googleCoverStatus" role="status" class="catalog-note"></p>
         <div id="googleCoverPreview" class="google-cover-view" hidden></div>
@@ -136,7 +136,7 @@
         <label>著者<input id="author" /></label>
         <label>巻次<input id="volume" type="text" placeholder="例：1、上巻、第2部" /></label>
         <label>出版社<input id="publisher" /></label>
-        <label>刊行日<input id="publishedDate" type="date" /></label>
+        <label>刊行年月<input id="publishedDate" type="month" min="0001-01" max="9999-12" /></label>
         <label>購入日<input id="purchaseDate" type="date" /></label>
         <label>購入価格（円）<input id="price" type="number" min="0" step="1" /></label>
         <label>形式
@@ -164,17 +164,9 @@
     </form>
   </dialog>
 
-  <dialog id="isbnHelpDialog" aria-labelledby="isbnHelpTitle">
-    <div class="terms-content">
-      <h2 id="isbnHelpTitle">ISBNの注意事項</h2>
-      <p>カメラ映像は送信しません。検索時はISBNのみを送信します。</p>
-      <button type="button" id="closeIsbnHelp" class="primary" autofocus>閉じる</button>
-    </div>
-  </dialog>
-
   <dialog id="photoHelpDialog" aria-labelledby="photoHelpTitle">
     <div class="terms-content">
-      <h2 id="photoHelpTitle">画像の注意事項</h2><p>Google Booksの書影は専用ボタンから検索します。ISBNを中継API経由でGoogleへ送信し、書影表示時にもGoogleへ通信します。書影のURLと書籍リンクを保存しますが、画像本体はアプリの画像DBやZIPに保存しません。ブラウザの通常の通信キャッシュに残る場合があります。オフライン・取得失敗時は共通画像を表示します。撮影・選択した画像を優先します。</p>
+      <h2 id="photoHelpTitle">書影画像の取り扱い</h2><p>Google Booksの書影は専用ボタンから検索します。ISBNを中継API経由でGoogleへ送信し、書影表示時にもGoogleへ通信します。書影のURLと書籍リンクを保存しますが、画像本体はアプリの画像DBやZIPに保存しません。ブラウザの通常の通信キャッシュに残る場合があります。オフライン・取得失敗時は共通画像を表示します。撮影・選択した画像を優先します。</p>
 
       <h3>書影画像の取り扱い</h3><p>JPEG・PNG・WebP、1枚30MB・6,000万画素まで。撮影後は表紙の補正候補を確認できます。ファイル選択後は「表紙を補正」から利用できます。補正せず使う場合は縮小・再圧縮しません。画像は端末内に保存し、向き以外のExifを削除します。写り込んだ個人情報は除去されません。</p>
       <button type="button" id="closePhotoHelp" class="primary" autofocus>閉じる</button>

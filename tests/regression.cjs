@@ -12,6 +12,7 @@ for(const [,file] of html.matchAll(/<script defer src="\.\/([^"]+)"/g)){
   assert.ok(sw.includes("'./"+file+"'"),file+' is precached');
 }
 (async()=>{
+  await require('./publication-month.cjs')();
   await require("./storage.cjs")();
   await require("./google-covers.cjs")();
   await require("./continuous-entry.cjs")();

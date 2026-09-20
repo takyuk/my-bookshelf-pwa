@@ -1,4 +1,18 @@
 const statusLabels = { unread: "未読", reading: "読書中", finished: "読了", paused: "中断" };
+// Shared by stored books, backup imports and NDL metadata. Never invent a month.
+function normalizePublicationMonth(value){
+  const text=String(value ?? '').trim();
+  const match=text.match(/^(\d{4})([-./])(\d{1,2})(?:\2(\d{1,2}))?$/) || text.match(/^(\d{4})(年)(\d{1,2})月(?:(\d{1,2})日)?$/);
+  if(!match)return '';
+  const year=Number(match[1]),month=Number(match[3]);
+  if(year<1||month<1||month>12)return '';
+  if(match[4]){
+    const leap=year%4===0&&(year%100!==0||year%400===0);
+    const max=[31,leap?29:28,31,30,31,30,31,31,30,31,30,31][month-1];
+    if(Number(match[4])<1||Number(match[4])>max)return '';
+  }
+  return `${match[1]}-${String(month).padStart(2,'0')}`;
+}
 function validateBooks(value){
   if(!Array.isArray(value)) throw new Error('書籍の一覧ではありません。');
   const ids = new Set();
@@ -17,6 +31,6 @@ function validateBooks(value){
     if(!Number.isInteger(rating) || rating < 0 || rating > 5) throw new Error('評価が不正です。');
     if(book.price != null && (typeof book.price !== 'number' || !Number.isFinite(book.price) || book.price < 0)) throw new Error('購入価格が不正です。');
     const coverId = typeof book.coverId === 'string' && /^[A-Za-z0-9-]{1,100}$/.test(book.coverId) ? book.coverId : null;
-    return {...book, googleCover:GoogleCoverData.clean(book.googleCover,book.isbn), googleCoverStatus:['missing','error'].includes(book.googleCoverStatus)?book.googleCoverStatus:'', coverId, status:book.status ?? 'unread', tags:book.tags ?? [], rating};
+    return {...book, publishedDate:normalizePublicationMonth(book.publishedDate), googleCover:GoogleCoverData.clean(book.googleCover,book.isbn), googleCoverStatus:['missing','error'].includes(book.googleCoverStatus)?book.googleCoverStatus:'', coverId, status:book.status ?? 'unread', tags:book.tags ?? [], rating};
   });
 }

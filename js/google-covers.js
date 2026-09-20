@@ -3,12 +3,13 @@ const GoogleCovers=(()=>{
  const logo='./icons/powered-by-google.png';
  function fallback(container,message){
   const image=document.createElement('img');image.src=placeholder;image.alt='書影なし';image.className='cover-placeholder';
-  const note=document.createElement('small');note.textContent=message;container.replaceChildren(image,note);
+  container.replaceChildren(image);
+  if(message){const note=document.createElement('small');note.textContent=message;container.append(note);}
  }
  function mount(container,value,status,{showLogo=true,linkImage=true,title=''}={}){
   container.hidden=false;
   if(navigator.onLine===false){fallback(container,'オフラインのため書影を表示できません。');return;}
-  if(!value){fallback(container,status==='error'?'書影を取得できませんでした。':'書影がありません。');return;}
+  if(!value){fallback(container,status==='error'?'書影を取得できませんでした。':'');return;}
   const link=document.createElement('a');link.href=value.link;link.target='_blank';link.rel='noopener noreferrer';link.className='google-cover-link';link.setAttribute('aria-label','書影をGoogle Booksで見る');
   const img=document.createElement('img');img.alt='Google Booksの書影';img.referrerPolicy='no-referrer';img.className='google-cover-image';
   const credit=document.createElement('div');credit.className='google-credit';
