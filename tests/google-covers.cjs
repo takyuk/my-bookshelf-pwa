@@ -93,12 +93,36 @@ module.exports=async()=>{
  const elements=new Map(),el=id=>{if(!elements.has(id))elements.set(id,new Element());return elements.get(id);};el('isbn').value=isbn;
  let local=false,localLoading=false,resolve;
  const context={GoogleCoverData:{clean},BookISBN:require('../js/isbn.js'),navigator:{onLine:true},location:{hostname:'localhost',href:'http://localhost:8000/'},document:{getElementById:el,createElement:()=>new Element(),addEventListener(){}},window:{addEventListener(){}},URL,AbortController,setTimeout,clearTimeout,fetch:async()=>new Response(JSON.stringify({cover}))};
- vm.createContext(context);vm.runInContext(fs.readFileSync(path.join(__dirname,'../js/google-covers.js'),'utf8'),context);
+ vm.createContext(context);for(const file of ['async-task','cover-view','google-cover-client','google-covers'])vm.runInContext(fs.readFileSync(path.join(__dirname,'../js/'+file+'.js'),'utf8'),context);
  context.options={isBusy:()=>false,hasLocal:()=>local,isLocalLoading:()=>localLoading};const ui=vm.runInContext('GoogleCovers.create(options)',context);
  ui.reset(null);await el('searchGoogleCover').listeners.click();assert.equal(ui.data().googleCover.id,cover.id);
  local=true;await el('searchGoogleCover').listeners.click();assert.match(el('googleCoverStatus').textContent,/優先/);ui.show();assert.equal(el('googleCoverPreview').hidden,true);
  local=false;context.fetch=()=>new Promise(r=>resolve=r);const pending=el('searchGoogleCover').listeners.click();local=true;ui.cancel();resolve(new Response(JSON.stringify({cover})));await pending;assert.equal(ui.data().googleCover,null);
  local=false;ui.reset({isbn,googleCover:cover});el('isbn').value='9784088725093';el('isbn').listeners.input();assert.equal(ui.data().googleCover,null);
  context.navigator.onLine=false;await el('searchGoogleCover').listeners.click();assert.match(el('googleCoverStatus').textContent,/オフライン/);
- console.log('PASS: Google ISBN matching, safe URLs, relay errors, local image priority, cancellation and offline fallback');
+ // Late responses and finally blocks must not overwrite a newer search.
+ context.navigator.onLine=true;el('isbn').value=isbn;ui.reset(null);
+ const requests=[];
+ context.fetch=(url,options)=>new Promise(resolve=>requests.push({resolve,signal:options.signal}));
+ const firstSearch=el('searchGoogleCover').listeners.click();
+ const secondSearch=el('searchGoogleCover').listeners.click();
+ assert.equal(requests[0].signal.aborted,true);
+ requests[0].resolve(new Response(JSON.stringify({cover})));
+ await firstSearch;
+ assert.equal(ui.data().googleCover,null);
+ assert.equal(el('searchGoogleCover').disabled,true);
+ requests[1].resolve(new Response(JSON.stringify({cover})));
+ await secondSearch;
+ assert.equal(ui.data().googleCover.id,cover.id);
+ assert.equal(el('searchGoogleCover').disabled,false);
+ // Exercise the actual UI timeout without waiting 15 seconds.
+ let timeoutCallback;
+ context.setTimeout=(callback,ms)=>{assert.equal(ms,15000);timeoutCallback=callback;return 1;};
+ context.clearTimeout=()=>{};
+ context.fetch=(url,{signal})=>new Promise((resolve,reject)=>signal.addEventListener('abort',()=>reject(Object.assign(new Error(),{name:'AbortError'}))));
+ const timedSearch=el('searchGoogleCover').listeners.click();
+ assert.equal(typeof timeoutCallback,'function');timeoutCallback();await timedSearch;
+ assert.match(el('googleCoverStatus').textContent,/時間切れ/);
+ assert.equal(el('searchGoogleCover').disabled,false);
+ console.log('PASS: Google ISBN matching, safe URLs, relay errors, local image priority, stale requests, timeout and offline fallback');
 };
