@@ -1,4 +1,4 @@
-name: Publish Bookshelf
+name: Test Bookshelf
 on:
   push:
     branches: [main]
@@ -6,10 +6,10 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: pages
+  group: bookshelf-tests
   cancel-in-progress: false
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -17,21 +17,3 @@ jobs:
         with:
           node-version: '22'
       - run: node tests/regression.cjs
-      - run: node scripts/prepare.cjs --publish
-      - uses: actions/upload-pages-artifact@v4
-        with:
-          path: dist
-  deploy:
-    if: github.ref == 'refs/heads/main'
-    needs: build
-    runs-on: ubuntu-latest
-    permissions:
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy
-        id: deployment
-        uses: actions/deploy-pages@v4
