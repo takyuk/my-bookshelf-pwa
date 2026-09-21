@@ -40,6 +40,7 @@
       <article><span id="statFinished">0</span><small>読了</small></article>
     </section>
 
+    <p class="access-notice" hidden role="status">認証を確認してください。<a href="/auth/refresh" target="_blank" rel="noopener">再ログイン</a>してから、元の画面で検索をやり直してください。</p>
     <section class="toolbar">
       <input id="searchInput" type="search" aria-label="本を検索" placeholder="タイトル・著者・ISBN・タグで検索" />
       <select id="statusFilter" aria-label="読書状態で絞り込み">
@@ -94,6 +95,7 @@
       </div>
 
       <input id="bookId" type="hidden" />
+      <p class="access-notice" hidden role="status">認証を確認してください。<a href="/auth/refresh" target="_blank" rel="noopener">再ログイン</a>してから、元の画面で検索をやり直してください。</p>
       <section class="isbn-tools" aria-label="ISBNから自動入力">
         <div class="isbn-actions">
           <span class="isbn-camera-actions"><button type="button" id="scanIsbnBtn" class="ghost">カメラでISBNを読む</button></span>
@@ -236,6 +238,7 @@
       <h3>7．権利の扱い</h3>
       <p>本規約への同意によって、登録画像その他の著作物について第三者の権利の許諾が付与されるものではありません。</p>
       <h3>8．Google Books書影</h3><p>Google Booksの書影は専用ボタンから検索します。ISBNを中継API経由でGoogleへ送信し、書影表示時にもGoogleへ通信します。書影のURLと書籍リンクを保存しますが、画像本体はアプリの画像DBやZIPに保存しません。ブラウザの通常の通信キャッシュに残る場合があります。オフライン・取得失敗時は共通画像を表示します。撮影・選択した画像を優先します。</p><p>Google Booksの書影の権利は各権利者に帰属します。Googleの帰属表示やリンク、画像内の権利表示を削除・改変せず、Googleの利用条件と適用法令に従って利用してください。URLの保存によって画像の恒久的な利用権を得るものではありません。書影は変更・削除される場合があり、バックアップ復元時の再表示を保証しません。法令上必要な場合やGoogleからの要請があった場合は表示を停止し、対象の書影URLを削除してください。</p><p><a href="https://developers.google.com/books/terms" target="_blank" rel="noopener noreferrer">Google Books API利用規約</a> ／ <a href="https://developers.google.com/terms" target="_blank" rel="noopener noreferrer">Google API利用規約</a> ／ <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Googleプライバシーポリシー</a></p><p>権利者からの削除依頼窓口：<a href="https://github.com/takyuk/my-bookshelf-pwa/issues" target="_blank" rel="noopener noreferrer">本アプリの問い合わせ窓口</a></p>
+      <h3>9．招待制の公開版について</h3><p>招待制の公開版ではCloudflare Accessでメール認証を行います。メールアドレスや認証に伴うアクセス情報はCloudflareで処理されます。ログインは利用許可の確認に用い、本棚データのクラウド同期やアカウント別の分離は行いません。各自の端末・ブラウザで利用してください。招待解除やログアウト後も、端末内の登録データとキャッシュは残り、オフラインで利用できる場合があります。公開URLの変更時はZIPの書き出し・読み込みでデータを移行してください。</p>
       <div id="termsConsent">
         <label class="overwrite-option"><input id="termsCheck" type="checkbox" /> 本規約を読み、内容に同意します。</label>
         <p>同意しない場合は本アプリを利用できません。この画面を閉じて終了してください。</p>
@@ -270,6 +273,7 @@
   <script defer src="./js/catalog-config.js"></script>
   <script defer src="./vendor/zxing-browser-0.2.1.min.js"></script>
   <script defer src="./js/catalog-errors.js"></script>
+  <script defer src="./js/access.js"></script>
   <script defer src="./js/catalog-client.js"></script>
   <script defer src="./js/isbn-scanner.js"></script>
   <script defer src="./js/catalog.js"></script>

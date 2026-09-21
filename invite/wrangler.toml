@@ -1,0 +1,16 @@
+name = "bookshelf-invite"
+main = "worker.mjs"
+compatibility_date = "2026-09-11"
+workers_dev = true
+preview_urls = false
+
+[assets]
+directory = "../dist/invite"
+binding = "ASSETS"
+run_worker_first = true
+
+[vars]
+ACCESS_ISSUER = "https://old-steel.cloudflareaccess.com"
+# Set the new application's AUD after enabling Access for All traffic.
+# Empty means fail closed: neither files nor API responses are served.
+ACCESS_AUD = "1deadeed8cf5394c5a3818f01bf424e161ea8c9c3f1cf0bd366fa06181ebb595"

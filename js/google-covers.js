@@ -42,7 +42,7 @@ const GoogleCovers=(()=>{
    try{
     const url=['localhost','127.0.0.1','[::1]'].includes(location.hostname)?new URL('/api/google-cover',location.href):new URL(CatalogClient.endpoint());url.pathname='/api/google-cover';url.search='';url.searchParams.set('isbn',isbn);
     timer=setTimeout(()=>active.abort(),15000);
-    const response=await fetch(url,{signal:active.signal,credentials:'omit',cache:'no-store'});
+    const response=await (typeof BookAccess!=='undefined'?BookAccess.request:fetch)(url,{signal:active.signal,credentials:'omit',cache:'no-store'});
     let data;try{data=await response.json();}catch{throw new Error('書影検索の応答を読み取れませんでした。');}
     if(!response.ok){
      const messages={'GOOGLE-CONFIG':'書影検索は未設定です。管理者によるAPIキーの設定が必要です。','GOOGLE-TIMEOUT':'書影検索が時間切れになりました。再度お試しください。'};

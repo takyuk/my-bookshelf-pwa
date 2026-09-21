@@ -12,7 +12,7 @@ const CatalogClient = (()=>{
   }
 
   async function fetchXml(url,signal){
-    const response=await fetch(url,{signal,credentials:'omit',cache:'no-store'});
+    const response=await (typeof BookAccess!=='undefined'?BookAccess.request:fetch)(url,{signal,credentials:'omit',cache:'no-store'});
     if(!response.ok) throw new Error(await responseError(response));
     return response.text();
   }

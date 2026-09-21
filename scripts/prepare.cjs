@@ -6,19 +6,21 @@ const git = (...args) => execFileSync('git', ['-c', `safe.directory=${root.repla
 const commit = git('rev-parse', 'HEAD');
 const publishing = process.argv.includes('--publish');
 const preview = process.argv.includes('--preview');
+const invite = process.argv.includes('--invite');
 const dirty = !!git('status', '--porcelain', '--', '.', ':!js/version.js', ':!dist');
 if(publishing && dirty) throw new Error('公開用ファイルはコミット済みの作業ツリーから生成してください。');
 const label = publishing ? `コミット ${commit.slice(0,7)}` : `基準コミット ${commit.slice(0,7)}${dirty ? '（未コミット変更あり）' : ''}`;
 const version = `globalThis.BOOKSHELF_VERSION = ${JSON.stringify({commit, label})};\n`;
 if(publishing || preview){
-  const output = path.join(root, 'dist');
+  const output = path.join(root, 'dist', ...(invite?['invite']:[]));
   fs.mkdirSync(output, {recursive:true});
   for(const file of ['index.html','manifest.webmanifest','sw.js','css','js','icons','vendor']){
     fs.cpSync(path.join(root,file), path.join(output,file), {recursive:true});
   }
   fs.writeFileSync(path.join(output,'js/version.js'),version);
   const worker = fs.readFileSync(path.join(output,'sw.js'),'utf8').replace(/const CACHE_NAME = '[^']+';/, `const CACHE_NAME = 'my-bookshelf-pwa-${commit}${preview ? '-preview' : ''}';`);
-  fs.writeFileSync(path.join(output,'sw.js'),worker);
+  fs.writeFileSync(path.join(output,'sw.js'),worker.replace('const ACCESS_PROTECTED = false;',`const ACCESS_PROTECTED = ${invite};`));
+  if(invite)fs.writeFileSync(path.join(output,'js/catalog-config.js'),"globalThis.BOOKSHELF_CATALOG = {endpoint:'/api/ndl',access:true};\n");
 } else {
   fs.writeFileSync(path.join(root,'js/version.js'),version);
 }

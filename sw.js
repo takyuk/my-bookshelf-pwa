@@ -1,6 +1,7 @@
 // Increment this version whenever publishing changes to app files.
 const CACHE_NAME = 'my-bookshelf-pwa-v7';
 const CACHE_PREFIX = 'my-bookshelf-pwa-';
+const ACCESS_PROTECTED = false;
 const APP_SHELL = [
   './',
   './index.html',
@@ -22,6 +23,7 @@ const APP_SHELL = [
   './js/backup-actions.js',
   './js/catalog-errors.js',
   './js/catalog-client.js',
+  './js/access.js',
   './js/isbn-scanner.js',
   './js/google-cover-data.js',
   './js/google-covers.js',
@@ -39,10 +41,21 @@ const APP_SHELL = [
   './icons/icon-512.png'
 ];
 
+function safeResponse(response){return response.ok&&!response.redirected&&response.type!=='opaqueredirect'&&(!ACCESS_PROTECTED||response.headers.get('X-Bookshelf-App')==='1');}
+function authResponse(response){return ACCESS_PROTECTED&&(response.type==='opaqueredirect'||response.redirected||[401,403].includes(response.status)||(response.ok&&response.headers.get('X-Bookshelf-App')!=='1'));}
+async function notifyAuth(){const clients=await self.clients.matchAll({type:'window'});for(const client of clients)client.postMessage({type:'ACCESS_REQUIRED'});}
 self.addEventListener('install', event => {
-  event.waitUntil(caches.open(CACHE_NAME)
-    .then(cache => cache.addAll(APP_SHELL.map(url => new Request(url, {cache:'reload'}))))
-    .then(() => self.skipWaiting()));
+  event.waitUntil((async()=>{
+    const entries=await Promise.all(APP_SHELL.map(async path=>{
+      const request=new Request(new URL(path,self.registration.scope),{cache:'reload',credentials:'same-origin',redirect:'manual'});
+      const response=await fetch(request);
+      if(!safeResponse(response))throw new Error('App shell unavailable');
+      return [request,response];
+    }));
+    const cache=await caches.open(CACHE_NAME);
+    await Promise.all(entries.map(([request,response])=>cache.put(request,response)));
+    await self.skipWaiting();
+  })());
 });
 
 self.addEventListener('activate', event => {
@@ -55,13 +68,15 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   const request = event.request;
   const url = new URL(request.url);
+  if(/^\/(api|auth|cdn-cgi)\//.test(url.pathname))return;
   if(request.method !== 'GET' || url.origin !== self.location.origin || !url.href.startsWith(self.registration.scope)) return;
   const isPage = request.mode === 'navigate';
   const isAppFile = APP_SHELL.some(path => new URL(path, self.registration.scope).href === url.href);
   if(!isPage && !isAppFile) return;
-  const network = fetch(request, {cache:'no-cache'});
+  const network = fetch(request, {cache:'no-cache',...(ACCESS_PROTECTED?{redirect:'manual'}:{})});
   event.waitUntil(network.then(async response => {
-    if(response.ok){
+    if(authResponse(response))await notifyAuth();
+    if(safeResponse(response)){
       const copy = response.clone();
       const cache = await caches.open(CACHE_NAME);
       await cache.put(request, copy);
@@ -76,7 +91,7 @@ self.addEventListener('fetch', event => {
         network,
         new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('Network timeout')), 5000); })
       ]);
-      if(response.ok) return response;
+      if(safeResponse(response)) return response;
       return (await cache.match(request)) || (isPage && await cache.match('./index.html')) || response;
     } catch {
       return (await cache.match(request)) || (isPage && await cache.match('./index.html')) || Response.error();

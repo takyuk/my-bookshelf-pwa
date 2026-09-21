@@ -1,5 +1,5 @@
 const Terms = (() => {
-  const key='my-bookshelf-terms', version=2;
+  const key='my-bookshelf-terms', version=3;
   let accepted=false;
   const modal=document.getElementById('termsDialog'),check=document.getElementById('termsCheck'),accept=document.getElementById('acceptTerms'),shell=document.getElementById('appShell');
   function saved(){try{const data=JSON.parse(localStorage.getItem(key));return data?.version===version&&typeof data.acceptedAt==='string'&&Number.isFinite(Date.parse(data.acceptedAt));}catch{return false;}}
