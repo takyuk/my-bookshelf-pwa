@@ -83,3 +83,10 @@ dialog{border:0;border-radius:20px;width:min(760px,calc(100vw - 24px));max-heigh
 .google-card-cover a{position:relative;z-index:1}
 .google-card-cover .google-cover-image,.google-card-cover .cover-placeholder{height:104px}
 #googleCoverStatus:empty{display:none}
+#duplicateDialog{max-width:560px;width:calc(100% - 32px);max-height:85dvh;overflow:auto}
+.duplicate-content{padding:20px;overflow-wrap:anywhere}
+.duplicate-content h2{font-size:1.1rem}
+.duplicate-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px}
+.duplicate-details{white-space:pre-wrap}
+#duplicateBooks section{padding:12px 0;border-bottom:1px solid #ddd}
+#duplicateBooks summary{cursor:pointer;color:#175db5}

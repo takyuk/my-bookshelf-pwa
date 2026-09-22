@@ -134,12 +134,6 @@
           <select id="status"><option value="unread">未読</option><option value="reading">読書中</option><option value="finished">読了</option><option value="paused">中断</option></select>
         </label>
         <label class="span-2">ISBN<input id="isbn" inputmode="numeric" /></label>
-        <section id="duplicateNotice" class="span-2" hidden aria-label="ISBNの重複確認">
-          <p role="status">同じISBNの本が登録されています。</p>
-          <div id="duplicateBooks"></div>
-          <button type="button" id="allowDuplicate" class="ghost">別の1冊として登録を続ける</button>
-          <p id="duplicateDecision" role="status"></p>
-        </section>
         <label class="span-2">タイトル *<input id="title" required /></label>
         <label>著者<input id="author" /></label>
         <label>巻次<input id="volume" type="text" placeholder="例：1、上巻、第2部" /></label>
@@ -252,6 +246,17 @@
       </div>
       <button id="closeTerms" type="button" class="ghost" hidden>閉じる</button>
       <p id="termsError" role="alert"></p>
+    </div>
+  </dialog>
+  <dialog id="duplicateDialog" aria-labelledby="duplicateTitle">
+    <div class="duplicate-content">
+      <h2 id="duplicateTitle" tabindex="-1">同じISBNの本が登録されています。</h2>
+      <p>登録済みの本を確認するか、別の1冊として登録を続けてください。</p>
+      <div id="duplicateBooks"></div>
+      <div class="duplicate-actions">
+        <button type="button" id="allowDuplicate" class="primary">別の1冊として登録を続ける</button>
+        <button type="button" id="closeDuplicate" class="ghost">入力に戻る</button>
+      </div>
     </div>
   </dialog>
   <noscript>本アプリを利用するにはJavaScriptを有効にしてください。</noscript>

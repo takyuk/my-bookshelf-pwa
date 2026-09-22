@@ -60,10 +60,10 @@ const BookEditor = {
         $('tags').value = (editing.tags || []).join(', ');
       }
       if (!dialog.open) dialog.showModal();
-      duplicates.reset();
       // Reset both the remembered focus and scroll position whenever the form opens.
       $('closeDialogBtn').focus({ preventScroll: true });
       form.querySelector('.book-form-scroll').scrollTop = 0;
+      duplicates.reset();
     }
     function closeDialog() {
       if (!isBusy()) dialog.close();
