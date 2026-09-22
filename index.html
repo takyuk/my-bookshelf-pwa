@@ -134,6 +134,12 @@
           <select id="status"><option value="unread">未読</option><option value="reading">読書中</option><option value="finished">読了</option><option value="paused">中断</option></select>
         </label>
         <label class="span-2">ISBN<input id="isbn" inputmode="numeric" /></label>
+        <section id="duplicateNotice" class="span-2" hidden aria-label="ISBNの重複確認">
+          <p role="status">同じISBNの本が登録されています。</p>
+          <div id="duplicateBooks"></div>
+          <button type="button" id="allowDuplicate" class="ghost">別の1冊として登録を続ける</button>
+          <p id="duplicateDecision" role="status"></p>
+        </section>
         <label class="span-2">タイトル *<input id="title" required /></label>
         <label>著者<input id="author" /></label>
         <label>巻次<input id="volume" type="text" placeholder="例：1、上巻、第2部" /></label>
@@ -269,6 +275,7 @@
   <script defer src="./js/covers.js"></script>
   <script defer src="./js/book-list.js"></script>
   <script defer src="./js/book-editor.js"></script>
+  <script defer src="./js/duplicates.js"></script>
   <script defer src="./js/backup-actions.js"></script>
   <script defer src="./js/pwa.js"></script>
   <script defer src="./js/app.js"></script>

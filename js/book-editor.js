@@ -15,6 +15,7 @@ const BookEditor = {
     const dialog = $('bookDialog'),
       form = $('bookForm');
     let editSnapshot;
+    const duplicates = BookDuplicates.create({ $, getBooks, isBusy });
     function resetForm() {
       form.reset();
       document.dispatchEvent(new Event('bookshelf-form-reset'));
@@ -59,6 +60,7 @@ const BookEditor = {
         $('tags').value = (editing.tags || []).join(', ');
       }
       if (!dialog.open) dialog.showModal();
+      duplicates.reset();
       // Reset both the remembered focus and scroll position whenever the form opens.
       $('closeDialogBtn').focus({ preventScroll: true });
       form.querySelector('.book-form-scroll').scrollTop = 0;
@@ -78,6 +80,7 @@ const BookEditor = {
         alert('画像の確認が終わるまでお待ちください。');
         return;
       }
+      if (!duplicates.check()) return;
       const books = getBooks();
       const continueEntry = e.submitter?.id === 'saveNextBtn';
       const id = $('bookId').value || uid();

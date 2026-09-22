@@ -20,6 +20,7 @@ const APP_SHELL = [
   './js/version.js',
   './js/book-list.js',
   './js/book-editor.js',
+  './js/duplicates.js',
   './js/backup-actions.js',
   './js/catalog-errors.js',
   './js/catalog-client.js',

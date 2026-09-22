@@ -15,7 +15,7 @@ module.exports=async()=>{
     Blob,URL:{createObjectURL:blob=>{downloaded=blob;return 'blob:test';},revokeObjectURL(){}},setTimeout:fn=>fn(),
     alert:message=>{throw Error(message);},
   });
-  for(const name of ['isbn','google-cover-data','validation','storage','book-list','book-editor','backup-actions','app']) vm.runInContext(fs.readFileSync(path.join(__dirname,`../js/${name}.js`),'utf8'),context);
+  for(const name of ['isbn','google-cover-data','validation','storage','book-list','duplicates','book-editor','backup-actions','app']) vm.runInContext(fs.readFileSync(path.join(__dirname,`../js/${name}.js`),'utf8'),context);
   assert.equal(element('recoveryNotice').hidden,false);
   assert.equal(element('exportBtn').disabled,true);
   assert.equal(element('addBookBtn').disabled,true);
