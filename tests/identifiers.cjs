@@ -12,6 +12,22 @@ module.exports = () => {
   const matches = vm.runInContext('BookDuplicates.matches', context);
   const sample = 'あなたもこの本が気に入るかもしれません。"帝国の参謀"（アンドリュー・クレピネヴィッチ; バリー・ワッツ 著）\nこちらから無料で読み始められます: https://read.amazon.co.jp/kp/kshare?asin=B01MS1EB6P&ref_=kar_di';
   const shared = parse({text:sample});
+  // Exercise the actual page entry point, not just the text parser: Android
+  // replaces ?share=kindle with the GET payload when launching the installed PWA.
+  const source = fs.readFileSync(path.join(__dirname, '../js/kindle-share.js'), 'utf8');
+  for (const query of ['?text='+encodeURIComponent(sample), '?url='+encodeURIComponent('https://read.amazon.co.jp/kp/kshare?asin=B01MS1EB6P'), '?share=kindle&text='+encodeURIComponent(sample), '']) {
+    let imported, cleaned;
+    const nodes = new Map();
+    vm.runInNewContext(source, {
+      URL, BookISBN:ids,
+      location:{href:'https://example.test/index.html'+query,pathname:'/index.html'},
+      document:{getElementById(id){if(!nodes.has(id))nodes.set(id,{addEventListener(){}});return nodes.get(id);},addEventListener(){}},
+      Terms:{allowed:()=>true},editor:{importKindle(book){imported=book;return true;}},
+      history:{replaceState(a,b,value){cleaned=value;}}
+    });
+    assert.equal(imported?.asin,query ? 'B01MS1EB6P' : undefined);
+    assert.equal(cleaned,query ? '/index.html' : undefined);
+  }
   assert.equal(shared.asin,'B01MS1EB6P');
   assert.equal(shared.title,'帝国の参謀');
   assert.equal(shared.author,'アンドリュー・クレピネヴィッチ、バリー・ワッツ');

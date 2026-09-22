@@ -51,6 +51,10 @@ for(const [,file] of html.matchAll(/<script defer src="\.\/([^"]+)"/g)){
     return response;
   }
   assert.equal(await (await get('index.html')).text(),'new page');
+  for (const query of ['?text=private-share','?url=private-share','?title=private-share','?share=kindle&text=private-share']) {
+    assert.equal(await (await get('index.html'+query)).text(),'new page');
+    assert.equal(entries.has(scope+'index.html'+query),false,'Shared payload must not be cached');
+  }
   for(const file of ["js/cover-correction.js","js/cover-worker.js","js/cover-geometry.js","js/book-list.js","js/book-editor.js","js/backup-actions.js","js/catalog-errors.js","js/catalog-client.js","js/isbn-scanner.js"])assert.equal(await (await get(file,'cors')).text(),'new page');
   networkResponse = Error('offline');
   for(const file of ["js/cover-correction.js","js/cover-worker.js","js/cover-geometry.js","js/book-list.js","js/book-editor.js","js/backup-actions.js","js/catalog-errors.js","js/catalog-client.js","js/isbn-scanner.js"])assert.equal(await (await get(file,'cors')).text(),'new page');

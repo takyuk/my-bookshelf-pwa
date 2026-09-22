@@ -82,7 +82,7 @@ self.addEventListener('fetch', event => {
   const network = fetch(request, {cache:'no-cache',...(ACCESS_PROTECTED?{redirect:'manual'}:{})});
   event.waitUntil(network.then(async response => {
     if(authResponse(response))await notifyAuth();
-    if(safeResponse(response) && url.searchParams.get('share') !== 'kindle'){
+    if(safeResponse(response) && url.searchParams.get('share') !== 'kindle' && !['title','text','url'].some(key => url.searchParams.has(key))){
       const copy = response.clone();
       const cache = await caches.open(CACHE_NAME);
       await cache.put(request, copy);

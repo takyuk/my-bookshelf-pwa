@@ -22,7 +22,9 @@ const KindleShare = {
 if (typeof module !== 'undefined') module.exports = KindleShare;
 if (typeof document !== 'undefined') (() => {
   const params = new URL(location.href).searchParams;
-  if (params.get('share') !== 'kindle') return;
+  // Android GET share targets replace the action's query with shared parameters.
+  // Keep accepting the old marker, but do not require it to survive OS dispatch.
+  if (params.get('share') !== 'kindle' && !['title','text','url'].some(key => params.has(key))) return;
   const notice = document.getElementById('kindleShareNotice');
   const message = document.getElementById('kindleShareMessage');
   const button = document.getElementById('openKindleShare');
