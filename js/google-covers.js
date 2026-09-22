@@ -11,6 +11,7 @@ const GoogleCovers = (() => {
       button.disabled = false;
     }
     function current() {
+      if (el('format').value === BookISBN.kindle) return null;
       return GoogleCoverData.clean(value, el('isbn').value);
     }
     function show() {
@@ -39,6 +40,7 @@ const GoogleCovers = (() => {
           '撮影・選択した画像を優先しています。Google書影へ変更する場合は、先に書影を削除してください。';
         return;
       }
+      if (el('format').value === BookISBN.kindle) { el('googleCoverStatus').textContent = 'ASINでのGoogle書影検索には対応していません。撮影・画像選択をご利用ください。'; return; }
       const isbn = BookISBN.normalize(el('isbn').value);
       if (!isbn) {
         el('googleCoverStatus').textContent = '正しいISBNを入力してください。';
@@ -100,6 +102,10 @@ const GoogleCovers = (() => {
       if (value && current()) return;
       clear();
       el('googleCoverStatus').textContent = '';
+    });
+    el('format').addEventListener('change', () => {
+      cancel();
+      if (el('format').value === BookISBN.kindle) clear();
     });
     document.addEventListener('bookshelf-save-start', cancel);
     el('bookDialog').addEventListener('close', cancel);

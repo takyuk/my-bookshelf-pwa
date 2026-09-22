@@ -37,6 +37,7 @@ const APP_SHELL = [
   './js/app.js',
   './js/pwa.js',
   './js/isbn.js',
+  './js/kindle-share.js',
   './js/ndl.js',
   './js/catalog-config.js',
   './js/catalog.js',
@@ -81,7 +82,7 @@ self.addEventListener('fetch', event => {
   const network = fetch(request, {cache:'no-cache',...(ACCESS_PROTECTED?{redirect:'manual'}:{})});
   event.waitUntil(network.then(async response => {
     if(authResponse(response))await notifyAuth();
-    if(safeResponse(response)){
+    if(safeResponse(response) && url.searchParams.get('share') !== 'kindle'){
       const copy = response.clone();
       const cache = await caches.open(CACHE_NAME);
       await cache.put(request, copy);

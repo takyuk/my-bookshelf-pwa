@@ -33,7 +33,7 @@ const BookList = {
           b.title,
           b.volume,
           b.author,
-          b.isbn,
+          BookISBN.identifier(b).value,
           b.publisher,
           b.location,
           (b.tags || []).join(' ')

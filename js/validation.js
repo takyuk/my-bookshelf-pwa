@@ -30,6 +30,11 @@ function validateBooks(value){
     const rating = book.rating == null ? 0 : Number(book.rating);
     if(!Number.isInteger(rating) || rating < 0 || rating > 5) throw new Error('評価が不正です。');
     if(book.price != null && (typeof book.price !== 'number' || !Number.isFinite(book.price) || book.price < 0)) throw new Error('購入価格が不正です。');
+    if (book.identifier != null && (typeof book.identifier !== 'object' || !['','ISBN','ASIN'].includes(book.identifier.type) || typeof book.identifier.value !== 'string')) throw new Error('識別子が不正です。');
+    const identifier = BookISBN.identifier(book);
+    book = {...book, identifier, format:book.format === '電子書籍' ? '電子書籍(その他)' : book.format,
+      isbn:identifier.type === 'ISBN' ? identifier.value : '',
+      asinConfirmed:identifier.type === 'ASIN' && book.asinConfirmed === BookISBN.asin(identifier.value) ? book.asinConfirmed : ''};
     const coverId = typeof book.coverId === 'string' && /^[A-Za-z0-9-]{1,100}$/.test(book.coverId) ? book.coverId : null;
     return {...book, publishedDate:normalizePublicationMonth(book.publishedDate), googleCover:GoogleCoverData.clean(book.googleCover,book.isbn), googleCoverStatus:['missing','error'].includes(book.googleCoverStatus)?book.googleCoverStatus:'', coverId, status:book.status ?? 'unread', tags:book.tags ?? [], rating};
   });

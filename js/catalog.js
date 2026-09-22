@@ -59,6 +59,7 @@
   async function lookup() {
     cancelLookup();
     stopCamera();
+    if (byId('format').value === BookISBN.kindle) { message('ASINでの国立国会図書館検索には対応していません。'); return; }
     const isbn = BookISBN.normalize(isbnInput.value);
     if (!isbn) {
       message(
@@ -137,6 +138,8 @@
     message,
     beforeStart: cancelLookup,
     onISBN: (isbn) => {
+      byId('format').value = '紙';
+      byId('format').dispatchEvent(new Event('change', {bubbles:true}));
       isbnInput.value = isbn;
       isbnInput.dispatchEvent(new Event('input', { bubbles: true }));
       lookup();
@@ -161,6 +164,7 @@
     message('');
   }
   document.addEventListener('bookshelf-form-reset', reset);
+  byId('format').addEventListener('change', reset);
   document.addEventListener('bookshelf-stop-camera', stopCamera);
   document.addEventListener('bookshelf-save-start', reset);
   formDialog.addEventListener('close', reset);
