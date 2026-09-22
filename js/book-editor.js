@@ -15,7 +15,7 @@ const BookEditor = {
     const dialog = $('bookDialog'),
       form = $('bookForm');
     let editSnapshot;
-    const duplicates = BookDuplicates.create({ $, getBooks, isBusy });
+    const duplicates = BookDuplicates.create({ $, getBooks, isBusy, onReturn: () => openDialog() });
     function resetForm() {
       form.reset();
       document.dispatchEvent(new Event('bookshelf-form-reset'));

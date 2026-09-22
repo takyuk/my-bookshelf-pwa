@@ -3,7 +3,7 @@ const BookDuplicates = {
     const normalized = BookISBN.normalize(isbn);
     return normalized ? books.filter(book => book.id !== editingId && BookISBN.normalize(book.isbn) === normalized) : [];
   },
-  create({ $, getBooks, isBusy }) {
+  create({ $, getBooks, isBusy, onReturn }) {
     const modal = $('duplicateDialog');
     let accepted = '', shown = '', identity = '', displayed = '';
     let returnFocus;
@@ -38,7 +38,12 @@ const BookDuplicates = {
       if ($('bookDialog').open && !isBusy() && shown !== next.signature) show(next);
     }
     $('isbn').addEventListener('input', detect);
-    $('closeDuplicate').addEventListener('click', close);
+    $('closeDuplicate').addEventListener('click', () => {
+      if (isBusy()) return;
+      returnFocus = null;
+      close();
+      onReturn();
+    });
     // Escape / Android back never grants consent or closes the editor.
     modal.addEventListener('cancel', event => { event.preventDefault(); close(); });
     modal.addEventListener('close', () => {
