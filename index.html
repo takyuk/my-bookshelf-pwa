@@ -99,7 +99,7 @@
       <section class="isbn-tools" aria-label="ISBNから自動入力">
         <div class="isbn-actions">
           <span class="isbn-camera-actions"><button type="button" id="scanIsbnBtn" class="ghost" aria-label="カメラでISBNを読む">ISBN読取</button></span>
-          <button type="button" id="lookupIsbnBtn" class="ghost" aria-label="ISBNで書誌検索">書誌検索</button>
+          <button type="button" id="lookupIsbnBtn" class="ghost" aria-label="ISBNで書誌検索">ISBNで書誌検索</button>
         </div>
         <label class="overwrite-option"><input id="overwriteBibliography" type="checkbox" /> 入力済みの書誌情報も置き換える</label>
 
@@ -124,9 +124,9 @@
             </div>
           </div>
           <div class="cover-control-stack">
+            <div class="google-search"><button type="button" id="searchGoogleCover" class="ghost" aria-label="Googleから取得（書影）">Googleから取得</button><img class="google-brand" src="./icons/powered-by-google.png" alt="Powered by Google" /></div>
             <button type="button" id="takeCover" class="ghost">書影を撮影</button>
             <button type="button" id="chooseCover" class="ghost">画像を選択</button>
-            <div class="google-search"><button type="button" id="searchGoogleCover" class="ghost" aria-label="Google Booksで書影を検索">Google検索</button><img class="google-brand" src="./icons/powered-by-google.png" alt="Powered by Google" /></div>
           </div>
         </div>
         <p id="googleCoverStatus" role="status" class="catalog-note"></p>
