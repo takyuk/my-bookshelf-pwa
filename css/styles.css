@@ -90,3 +90,31 @@ dialog{border:0;border-radius:20px;width:min(760px,calc(100vw - 24px));max-heigh
 .duplicate-details{white-space:pre-wrap}
 #duplicateBooks section{padding:12px 0;border-bottom:1px solid #ddd}
 #duplicateBooks summary{cursor:pointer;color:#175db5}
+/* Compact editor: preserve the 160px / 120px cover preview and wrap controls
+   below it when a wide local image or enlarged text needs more room. */
+#bookForm .book-form-scroll{padding:12px}
+#bookForm .dialog-head{margin-bottom:6px}
+#bookForm .isbn-tools,#bookForm .cover-tools{padding:8px;margin-bottom:8px}
+#bookForm .isbn-tools>.isbn-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+#bookForm .isbn-camera-actions{display:block}
+#bookForm .isbn-camera-actions button{width:100%}
+#bookForm .isbn-tools>.isbn-actions button{min-height:44px;padding:8px;white-space:normal}
+#bookForm .overwrite-option{margin-top:6px}
+#bookForm .cover-tools-head{margin-bottom:4px;gap:2px}
+#bookForm .cover-tools-head h3{margin:0}
+#bookForm #showPhotoHelp{padding:6px 0}
+.cover-layout{display:flex;flex-wrap:wrap;align-items:flex-start;gap:8px}
+.cover-preview-slot{width:160px;max-width:100%;flex:none}
+.cover-preview-slot:has(#coverPreview:not([hidden])){width:auto}
+#bookForm .google-cover-view{width:160px;max-width:100%;margin:0}
+#bookForm #coverPreview{margin:0 auto}
+.cover-control-stack{display:grid;gap:6px;flex:1 0 100px;min-width:0}
+.cover-control-stack button{width:100%;min-height:44px;padding:8px;white-space:normal}
+.cover-control-stack .google-search{display:flex;flex-direction:column;gap:2px;margin:0}
+.cover-secondary-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;justify-content:center}
+.cover-secondary-actions button{min-height:44px;padding:8px;white-space:normal}
+#bookForm .form-grid{gap:8px}
+@media(max-width:420px){
+  #bookForm>.dialog-actions{padding-inline:12px}
+  #bookForm>.dialog-actions button{padding-inline:10px}
+}

@@ -12,7 +12,7 @@ const IsbnScanner = {create({scanButton,panel,video,formDialog,message,beforeSta
     if(!globalThis.isSecureContext || !navigator.mediaDevices?.getUserMedia){message('カメラはHTTPSで開いた対応ブラウザで利用できます。ISBNの手入力でも検索できます。');return;}
     if(!globalThis.ZXingBrowser){message('読み取り機能を読み込めませんでした。ページを再読み込みしてください。');return;}
     const session=scanSession;
-    scanButton.disabled=true;panel.hidden=false;message('カメラを許可し、978または979から始まるバーコードを枠内に写してください。');
+    scanButton.disabled=true;panel.hidden=false;message('');
     let last='',hits=0;
     try {
       const acquired=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}}});

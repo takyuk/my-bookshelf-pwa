@@ -89,7 +89,6 @@
       <div class="book-form-scroll">
       <div class="dialog-head">
         <div>
-          <p class="eyebrow">Book</p>
           <h2 id="dialogTitle">本を追加</h2>
         </div>
         <button type="button" id="closeDialogBtn" class="icon-btn" aria-label="閉じる">×</button>
@@ -99,8 +98,8 @@
       <p class="access-notice" hidden role="status">認証を確認してください。<a href="/auth/refresh" target="_blank" rel="noopener">再ログイン</a>してから、元の画面で検索をやり直してください。</p>
       <section class="isbn-tools" aria-label="ISBNから自動入力">
         <div class="isbn-actions">
-          <span class="isbn-camera-actions"><button type="button" id="scanIsbnBtn" class="ghost">カメラでISBNを読む</button></span>
-          <button type="button" id="lookupIsbnBtn" class="ghost">ISBNで書誌検索</button>
+          <span class="isbn-camera-actions"><button type="button" id="scanIsbnBtn" class="ghost" aria-label="カメラでISBNを読む">ISBN読取</button></span>
+          <button type="button" id="lookupIsbnBtn" class="ghost" aria-label="ISBNで書誌検索">書誌検索</button>
         </div>
         <label class="overwrite-option"><input id="overwriteBibliography" type="checkbox" /> 入力済みの書誌情報も置き換える</label>
 
@@ -115,27 +114,33 @@
       </section>
       <section class="cover-tools" aria-label="書影の登録">
         <div class="cover-tools-head"><h3>書影（1冊につき1枚）</h3><a id="showPhotoHelp" href="#photoHelpDialog" aria-haspopup="dialog" aria-controls="photoHelpDialog">書影画像の取り扱い</a></div>
-        <div class="google-search"><button type="button" id="searchGoogleCover" class="ghost">Google Booksで書影を検索</button><img class="google-brand" src="./icons/powered-by-google.png" alt="Powered by Google" /></div>
-        <p id="googleCoverStatus" role="status" class="catalog-note"></p>
-        <div id="googleCoverPreview" class="google-cover-view" hidden></div>
-        <img id="coverPreview" alt="登録する書影のプレビュー" hidden />
-        <div class="isbn-actions">
-          <button type="button" id="takeCover" class="ghost">書影を撮影</button>
-          <button type="button" id="chooseCover" class="ghost">画像を選択</button>
-          <button type="button" id="correctCover" class="ghost" hidden>表紙を補正</button>
-          <button type="button" id="removeCover" class="ghost">書影を削除</button>
+        <div class="cover-layout">
+          <div class="cover-preview-slot">
+            <div id="googleCoverPreview" class="google-cover-view" hidden></div>
+            <img id="coverPreview" alt="登録する書影のプレビュー" hidden />
+            <div class="cover-secondary-actions">
+              <button type="button" id="correctCover" class="ghost" hidden>表紙を補正</button>
+              <button type="button" id="removeCover" class="ghost">書影を削除</button>
+            </div>
+          </div>
+          <div class="cover-control-stack">
+            <button type="button" id="takeCover" class="ghost">書影を撮影</button>
+            <button type="button" id="chooseCover" class="ghost">画像を選択</button>
+            <div class="google-search"><button type="button" id="searchGoogleCover" class="ghost" aria-label="Google Booksで書影を検索">Google検索</button><img class="google-brand" src="./icons/powered-by-google.png" alt="Powered by Google" /></div>
+          </div>
         </div>
+        <p id="googleCoverStatus" role="status" class="catalog-note"></p>
         <input id="cameraCoverInput" type="file" accept="image/jpeg,image/png,image/webp" capture="environment" hidden />
         <input id="fileCoverInput" type="file" accept="image/jpeg,image/png,image/webp" hidden />
 
         <p id="coverStatus" role="status"></p>
       </section>
       <div class="form-grid">
+        <label class="span-2">形式<select id="format"><option>紙</option><option>電子書籍(Kindle)</option><option>電子書籍(その他)</option><option>その他</option></select></label>
+        <label class="span-2">ISBN/ASIN<input id="isbn" autocapitalize="characters" spellcheck="false" /></label>
         <label class="span-2">状態
           <select id="status"><option value="unread">未読</option><option value="reading">読書中</option><option value="finished">読了</option><option value="paused">中断</option></select>
         </label>
-        <label class="span-2">形式<select id="format"><option>紙</option><option>電子書籍(Kindle)</option><option>電子書籍(その他)</option><option>その他</option></select></label>
-        <label class="span-2">ISBN/ASIN<input id="isbn" autocapitalize="characters" spellcheck="false" /></label>
         <a id="amazonBookLink" class="span-2" target="_blank" rel="noopener noreferrer" hidden>Amazonでこの本を確認</a>
         <label class="span-2">タイトル *<input id="title" required /></label>
         <label>著者<input id="author" /></label>
@@ -263,7 +268,6 @@
       <div class="duplicate-actions">
         <button type="button" id="allowDuplicate" class="primary">別の1冊として登録を続ける</button>
         <button type="button" id="closeDuplicate" class="ghost">登録しない</button>
-        <p>「登録しない」を押すと、入力内容と未保存の書影をクリアします。登録済みの本は変更されません。</p>
       </div>
     </div>
   </dialog>
