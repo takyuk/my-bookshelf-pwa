@@ -136,7 +136,6 @@
         </label>
         <label class="span-2">形式<select id="format"><option>紙</option><option>電子書籍(Kindle)</option><option>電子書籍(その他)</option><option>その他</option></select></label>
         <label class="span-2">ISBN/ASIN<input id="isbn" autocapitalize="characters" spellcheck="false" /></label>
-        <p id="identifierHint" class="catalog-note span-2"></p>
         <a id="amazonBookLink" class="span-2" target="_blank" rel="noopener noreferrer" hidden>Amazonでこの本を確認</a>
         <label class="span-2">タイトル *<input id="title" required /></label>
         <label>著者<input id="author" /></label>
@@ -247,6 +246,13 @@
       </div>
       <button id="closeTerms" type="button" class="ghost" hidden>閉じる</button>
       <p id="termsError" role="alert"></p>
+    </div>
+  </dialog>
+  <dialog id="isbnFormatDialog" aria-labelledby="isbnFormatTitle" aria-describedby="isbnFormatMessage">
+    <div class="duplicate-content">
+      <h2 id="isbnFormatTitle">ISBN形式確認</h2>
+      <p id="isbnFormatMessage">紙の本・Kindle以外の電子書籍は正しいISBNを入力してください。</p>
+      <button id="closeIsbnFormat" type="button" class="primary" autofocus>OK</button>
     </div>
   </dialog>
   <dialog id="duplicateDialog" aria-labelledby="duplicateTitle">

@@ -14,12 +14,11 @@ const BookEditor = {
   }) {
     const dialog = $('bookDialog'),
       form = $('bookForm');
-    let editSnapshot, confirmedAsin = '';
+    let editSnapshot;
     function updateIdentifier() {
       const kindle = $('format').value === BookISBN.kindle;
       const value = BookISBN.asin($('isbn').value);
       $('isbn').inputMode = kindle || $('format').value === 'その他' ? 'text' : 'numeric';
-      $('identifierHint').textContent = kindle ? 'KindleのASINを入力してください。不明な場合は空欄で登録できます。' : $('format').value === 'その他' ? '入力した識別子をそのまま保存します。空欄でも登録できます。' : 'ISBNを入力してください。不明な場合は空欄で登録できます。';
       $('amazonBookLink').hidden = !(kindle && value);
       if (kindle && value) $('amazonBookLink').href = 'https://www.amazon.co.jp/dp/' + value;
       $('location').readOnly = kindle;
@@ -30,7 +29,6 @@ const BookEditor = {
     const duplicates = BookDuplicates.create({ $, getBooks, isBusy, onReturn: () => openDialog() });
     function resetForm() {
       form.reset();
-      confirmedAsin = '';
       document.dispatchEvent(new Event('bookshelf-form-reset'));
       $('bookId').value = '';
       $('status').value = 'finished';
@@ -74,7 +72,6 @@ const BookEditor = {
       }
       if (editing) {
         $('isbn').value = BookISBN.identifier(editing).value;
-        confirmedAsin = editing.asinConfirmed || '';
       }
       updateIdentifier();
       if (!dialog.open) dialog.showModal();
@@ -90,6 +87,10 @@ const BookEditor = {
       if (isBusy()) event.preventDefault();
     });
     dialog.addEventListener('close', refreshBooks);
+    $('closeIsbnFormat').addEventListener('click', () => $('isbnFormatDialog').close());
+    $('isbnFormatDialog').addEventListener('close', () => {
+      if (dialog.open) $('isbn').focus({ preventScroll: true });
+    });
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -100,12 +101,9 @@ const BookEditor = {
       }
       const identifier = BookISBN.identify($('isbn').value, $('format').value);
       if (identifier.value && !identifier.type && $('format').value !== 'その他') {
-        alert($('format').value === BookISBN.kindle ? 'ASINは10文字の英数字で入力してください。' : '紙の本・Kindle以外の電子書籍は正しいISBNを入力してください。');
+        if ($('format').value === BookISBN.kindle) alert('ASINは10文字の英数字で入力してください。');
+        else $('isbnFormatDialog').showModal();
         return;
-      }
-      if ($('format').value === BookISBN.kindle && identifier.value && confirmedAsin !== identifier.value) {
-        if (!confirm('商品の種別を自動確認できません。このASINがKindle版のものであることを確認しましたか？ 紙の本の場合はキャンセルし、形式を「紙」に変更してISBNを入力してください。')) return;
-        confirmedAsin = identifier.value;
       }
       if (!duplicates.check()) return;
       const books = getBooks();
@@ -121,7 +119,6 @@ const BookEditor = {
         author: $('author').value.trim(),
         identifier,
         isbn: identifier.type === 'ISBN' ? identifier.value : '',
-        asinConfirmed: identifier.type === 'ASIN' ? confirmedAsin : '',
         publisher: $('publisher').value.trim(),
         publishedDate: $('publishedDate').value,
         purchaseDate: $('purchaseDate').value,
